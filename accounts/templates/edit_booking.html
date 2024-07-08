@@ -1,0 +1,177 @@
+{% load custom_filters %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2,
+        h3 {
+            color: #333;
+        }
+
+        .dish-section {
+            margin-bottom: 20px;
+        }
+
+        .dish-item {
+            margin-bottom: 10px;
+        }
+
+        input[type="number"] {
+            width: 50px;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Edit Booking</h2>
+    <form id="bbqForm" method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div>
+            {{ form.date.label_tag }} {{ form.date }}
+        </div>
+        <div>
+            {{ form.time.label_tag }} {{ form.time }}
+        </div>
+        <div>
+            {{ form.location.label_tag }} {{ form.location }}
+        </div>
+        <div>
+            {{ form.guests.label_tag }} {{ form.guests }}
+        </div>
+
+
+        <h3>Main Dishes</h3>
+        <div id="mainDishes" class="dish-section">
+            {% for dish in form.MAIN_DISHES %}
+            <div class="dish-item">
+                <input type="checkbox" id="main_dish_{{ dish.0 }}" name="main_dish_{{ dish.0 }}" {% if dish.0 in booking.main_dishes %}checked{% endif %}>
+                <label for="main_dish_{{ dish.0 }}">{{ dish.1 }}</label>
+                <input type="number" id="main_dish_{{ dish.0 }}_count" name="main_dish_{{ dish.0 }}_count" min="0"
+                    value="{{ booking.main_dishes|get_item:dish.0|default:0 }}">
+            </div>
+            {% endfor %}
+        </div>
+
+        <h3>Side Dishes</h3>
+        <div id="sideDishes" class="dish-section">
+            {% for dish in form.SIDE_DISHES %}
+            <div class="dish-item">
+                <input type="checkbox" id="side_dish_{{ dish.0 }}" name="side_dish_{{ dish.0 }}" {% if dish.0 in booking.side_dishes %}checked{% endif %}>
+                <label for="side_dish_{{ dish.0 }}">{{ dish.1 }}</label>
+                <input type="number" id="side_dish_{{ dish.0 }}_count" name="side_dish_{{ dish.0 }}_count" min="0"
+                    value="{{ booking.side_dishes|get_item:dish.0|default:0 }}">
+            </div>
+            {% endfor %}
+        </div>
+
+        <h3>Desserts</h3>
+        <div id="desserts" class="dish-section">
+            {% for dessert in form.DESSERTS %}
+            <div class="dish-item">
+                <input type="checkbox" id="dessert_{{ dessert.0 }}" name="dessert_{{ dessert.0 }}" {% if dessert.0 in booking.desserts %}checked{% endif %}>
+                <label for="dessert_{{ dessert.0 }}">{{ dessert.1 }}</label>
+                <input type="number" id="dessert_{{ dessert.0 }}_count" name="dessert_{{ dessert.0 }}_count" min="0"
+                    value="{{ booking.desserts|get_item:dessert.0|default:0 }}">
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit">Update</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const guestsInput = document.getElementById('id_guests');
+            const mainDishes = document.querySelectorAll('#mainDishes input[type="number"]');
+            const sideDishes = document.querySelectorAll('#sideDishes input[type="number"]');
+            const desserts = document.querySelectorAll('#desserts input[type="number"]');
+
+            function createErrorElement(id) {
+                const errorElement = document.createElement('div');
+                errorElement.id = id;
+                errorElement.className = 'error';
+                return errorElement;
+            }
+
+            const mainDishError = createErrorElement('mainDishError');
+            const sideDishError = createErrorElement('sideDishError');
+            const dessertError = createErrorElement('dessertError');
+
+            document.getElementById('mainDishes').appendChild(mainDishError);
+            document.getElementById('sideDishes').appendChild(sideDishError);
+            document.getElementById('desserts').appendChild(dessertError);
+
+            function validateForm() {
+                const guests = parseInt(guestsInput.value) || 0;
+
+                let mainDishCount = 0;
+                let sideDishCount = 0;
+                let dessertCount = 0;
+
+                mainDishes.forEach(input => {
+                    mainDishCount += parseInt(input.value) || 0;
+                });
+
+                sideDishes.forEach(input => {
+                    sideDishCount += parseInt(input.value) || 0;
+                });
+
+                desserts.forEach(input => {
+                    dessertCount += parseInt(input.value) || 0;
+                });
+
+                mainDishError.textContent = mainDishCount !== guests ? `Main dish count should be equal to the number of guests (${guests})` : '';
+                sideDishError.textContent = sideDishCount !== guests * 2 ? `Side dish count should be twice the number of guests (${guests * 2})` : '';
+                dessertError.textContent = dessertCount !== guests * 2 ? `Dessert count should be twice the number of guests (${guests * 2})` : '';
+            }
+
+            guestsInput.addEventListener('input', validateForm);
+
+            const allDishInputs = [...mainDishes, ...sideDishes, ...desserts];
+            allDishInputs.forEach(input => {
+                input.addEventListener('input', validateForm);
+            });
+
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                const countInput = document.getElementById(`${checkbox.id}_count`);
+
+                // Set initial visibility based on checkbox state
+                countInput.style.display = checkbox.checked ? 'inline' : 'none';
+
+                checkbox.addEventListener('change', function () {
+                    countInput.style.display = this.checked ? 'inline' : 'none';
+                    if (this.checked && countInput.value === '0') {
+                        countInput.value = 1;
+                    } else if (!this.checked) {
+                        countInput.value = 0;
+                    }
+                    validateForm();
+                });
+            });
+
+            // Run initial validation
+            validateForm();
+        });
+    </script>
+</body>
+
+</html>
