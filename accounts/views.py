@@ -67,9 +67,11 @@ def book_bbq(request):
             booking = form.save(commit=False)
             booking.user = request.user
             booking.drinks = form.cleaned_data['guests']
-           
+            booking.status = 0  # Reset status to pending
+            booking.event_type = form.cleaned_data['event_type']
             # Process main dishes
             main_dishes = {}
+
             for dish in form.MAIN_DISHES:
                 if form.cleaned_data[f'main_dish_{dish[0]}']:
                     main_dishes[dish[0]] = form.cleaned_data[f'main_dish_{dish[0]}_count']
@@ -107,13 +109,40 @@ def delete_booking(request, booking_id):
             return HttpResponseForbidden("You don't have permission to delete this booking.")
         
         # Delete the booking
-        booking.delete()
+        if booking.status == 2:
+
+            booking.delete()
+        else:
+            messages.error(request, "You can't delete a booking that is not cancelled.")
+
+            return redirect(reverse('view_booked_events'))
+
+            
+
         
         # Redirect back to the list of bookings
         return redirect(reverse('view_booked_events'))
     
     # If it's not a POST request, redirect to the list of bookings
     return redirect(reverse('view_booked_events'))
+
+@login_required
+def cancel_booking(request, booking_id):
+    if request.method == 'POST':
+        booking = get_object_or_404(BBQBooking, id=booking_id)
+        
+        # Ensure the user owns this booking
+        if booking.user != request.user:
+            return HttpResponseForbidden("You don't have permission to cancel this booking.")
+        
+        # Cancel the booking
+        booking.status = 2
+        booking.save()
+        
+        messages.success(request, "Booking cancelled successfully.")
+
+        # Redirect back to the list of bookings
+        return redirect(reverse('view_booked_events'))
 
 @login_required
 def edit_booking(request, booking_id):
@@ -128,8 +157,9 @@ def edit_booking(request, booking_id):
         if form.is_valid():
             booking = form.save(commit=False)
             booking.user = request.user
+            booking.status = 0  # Reset status to pending
             booking.drinks = form.cleaned_data['guests']
-            
+            booking.event_type = form.cleaned_data['event_type']
             # Process main dishes
             main_dishes = {}
             for dish in form.MAIN_DISHES:

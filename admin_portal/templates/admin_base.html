@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Your Site Name{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        .nav-link {
+            @apply px-3 py-2 rounded-md text-sm font-medium;
+        }
+
+        .nav-link:hover {
+            @apply bg-gray-700 text-white;
+        }
+
+        .sidebar {
+            @apply bg-gray-800 w-64 fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out;
+        }
+
+        .sidebar.hidden {
+            @apply -translate-x-full;
+        }
+
+        .mobile-menu-button {
+            @apply md:hidden;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar {
+                @apply translate-x-0;
+            }
+
+            .mobile-menu-button {
+                @apply hidden;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+    <header class="bg-gray-800">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+            <h2 class="text-white text-xl mx-auto">Admin Portal</h2>
+            <button id="mobile-menu-button" class="mobile-menu-button text-white focus:outline-none hidden sm:block">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
+                    </path>
+                </svg>
+            </button>
+        </nav>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar md:relative hidden md:block">
+            <div class="w-40 p-4 bg-gray-800 min-h-screen">
+                <ul>
+                    <li><a href="{% url 'admin_dashboard' %}"
+                            class="text-gray-300 hover:text-white block py-2">Dashboard</a>
+                    </li>
+                    <li><a href="{% url 'admin_client_list' %}"
+                            class="text-gray-300 hover:text-white block py-2">Clients</a>
+                    </li>
+                    <li><a href="{% url 'admin_booking_list' %}"
+                            class="text-gray-300 hover:text-white block py-2">Bookings</a>
+                    </li>
+                    <li><a href="{% url 'logout' %}" class="text-gray-300 hover:text-white block py-2">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+
+
+        <!-- Main content -->
+        <main class="flex-1 p-10 ml-64 md:ml-0">
+            {% block admin_content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <footer class="bg-gray-800 mt-8">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-400 text-sm">
+                &copy; {% now "Y" %} Your Site Name. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        });
+    </script>
+</body>
+
+</html>

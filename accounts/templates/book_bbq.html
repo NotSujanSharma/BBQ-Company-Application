@@ -55,7 +55,15 @@
         <div>
             {{ form.guests.label_tag }} {{ form.guests }}
         </div>
-
+        <!-- <label for="id_event_type">Event Type:</label>
+        <select id="id_event_type" name="event_type">
+            {% for value, label in form.EVENT_TYPES %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select> -->
+        <div>
+            {{ form.event_type.label_tag }}{{form.event_type}}
+        </div>
 
         <h3>Main Dishes</h3>
         <div id="mainDishes" class="dish-section">

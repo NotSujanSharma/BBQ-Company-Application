@@ -21,10 +21,11 @@ class BBQBookingForm(forms.ModelForm):
     MAIN_DISHES = BBQBooking.MAIN_DISHES
     SIDE_DISHES = BBQBooking.SIDE_DISHES
     DESSERTS = BBQBooking.DESSERTS
+    EVENT_TYPES = BBQBooking.EVENT_TYPES
 
     class Meta:
         model = BBQBooking
-        fields = ['date', 'time', 'location', 'guests']
+        fields = ['date', 'time', 'location', 'guests', 'event_type']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'time': forms.TimeInput(attrs={'type': 'time'}),
@@ -32,6 +33,8 @@ class BBQBookingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['event_type'].widget = forms.Select(choices=self.EVENT_TYPES)
+        
         for dish, name in self.MAIN_DISHES:
             self.fields[f'main_dish_{dish}'] = forms.BooleanField(required=False, label=name)
             self.fields[f'main_dish_{dish}_count'] = forms.IntegerField(min_value=0, required=False, initial=0, widget=forms.NumberInput(attrs={'style': 'display:none;'}))
@@ -47,8 +50,13 @@ class BBQBookingForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         guests = cleaned_data.get('guests')
+        event_type = cleaned_data.get('event_type')
+        
         if not guests:
             raise forms.ValidationError("Number of guests is required.")
+        
+        if not event_type:
+            raise forms.ValidationError("Event type is required.")
 
         main_dish_total = sum(cleaned_data.get(f'main_dish_{dish[0]}_count', 0) or 0 for dish in self.MAIN_DISHES if cleaned_data.get(f'main_dish_{dish[0]}'))
         side_dish_total = sum(cleaned_data.get(f'side_dish_{dish[0]}_count', 0) or 0 for dish in self.SIDE_DISHES if cleaned_data.get(f'side_dish_{dish[0]}'))
@@ -62,5 +70,7 @@ class BBQBookingForm(forms.ModelForm):
             raise forms.ValidationError(f"Total desserts ({dessert_total}) must be twice the number of guests ({guests * 2}).")
 
         # Set drinks equal to number of guests
+        cleaned_data['drinks'] = guests
+        cleaned_data['status'] = 0  # Pending status
 
         return cleaned_data

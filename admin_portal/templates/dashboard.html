@@ -1,0 +1,11 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block admin_content %}
+<h2>Dashboard</h2>
+<p>Welcome, {{ user.get_full_name }}</p>
+<a href="{% url 'update_profile' %}">Update Profile</a>
+<br>
+
+{% endblock %}
