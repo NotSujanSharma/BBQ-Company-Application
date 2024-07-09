@@ -2,17 +2,26 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
 from accounts.models import CustomUser, BBQBooking
 from django.db.models import Count
-
+from django.utils import timezone
 @staff_member_required
 def admin_dashboard(request):
     total_clients = CustomUser.objects.count()
     total_bookings = BBQBooking.objects.count()
-    recent_bookings = BBQBooking.objects.order_by('-date')[:5]
+    
+    # Upcoming confirmed events (status = 1, date >= today)
+    upcoming_events = BBQBooking.objects.filter(
+        status=1, 
+        date__gte=timezone.now().date()
+    ).order_by('date', 'time')[:5]
+    
+    # New pending events (status = 0)
+    new_events = BBQBooking.objects.filter(status=0).order_by('date', 'time')[:5]
     
     context = {
         'total_clients': total_clients,
         'total_bookings': total_bookings,
-        'recent_bookings': recent_bookings,
+        'upcoming_events': upcoming_events,
+        'new_events': new_events,
     }
     return render(request, 'dashboard.html', context)
 
