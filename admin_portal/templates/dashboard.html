@@ -23,12 +23,23 @@
             {% if upcoming_events %}
             <ul class="space-y-4">
                 {% for event in upcoming_events %}
-                <li class="border-b border-gray-700 pb-4">
-                    <p class="font-semibold text-white">{{ event.get_event_type_display }}</p>
-                    <p class="text-sm text-gray-400">Date: {{ event.date|date:"M d, Y" }}</p>
-                    <p class="text-sm text-gray-400">Time: {{ event.time|time:"H:i" }}</p>
-                    <p class="text-sm text-gray-400">Location: {{ event.location }}</p>
-                    <p class="text-sm text-gray-400">Guests: {{ event.guests }}</p>
+                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 px-3 py-3 transition-colors duration-200 cursor-pointer event-item"
+                    data-event-id="{{ event.id }}">
+                    <div class="flex flex-row gap-9">
+                        <div>
+                            <p class="font-semibold text-white">{{ event.get_event_type_display }}</p>
+                            <p class="text-sm text-gray-400">Date: {{ event.date|date:"M d, Y" }}</p>
+                            <p class="text-sm text-gray-400">Time: {{ event.time|time:"H:i" }}</p>
+                            <p class="text-sm text-gray-400">Location: {{ event.location }}</p>
+                            <p class="text-sm text-gray-400">Guests: {{ event.guests }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-400">{{ event.user.first_name }} {{event.user.last_name}}
+                            </p>
+                            <p class="text-sm text-gray-400">Email: {{ event.user.email}}</p>
+                            <p class="text-sm text-gray-400">Contact Number: {{ event.user.contact_number }}</p>
+                        </div>
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
@@ -40,18 +51,30 @@
         <div class="bg-gray-800 rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold mb-4 text-gray-400">New Pending Events</h2>
             {% if new_events %}
+
             <ul class="space-y-4">
                 {% for event in new_events %}
-                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 transition-colors duration-200 cursor-pointer event-item"
+                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 px-3 py-3 transition-colors duration-200 cursor-pointer event-item"
                     data-event-id="{{ event.id }}">
-                    <p class="font-semibold text-white">{{ event.get_event_type_display }}</p>
-                    <p class="text-sm text-gray-400">Date: {{ event.date|date:"M d, Y" }}</p>
-                    <p class="text-sm text-gray-400">Time: {{ event.time|time:"H:i" }}</p>
-                    <p class="text-sm text-gray-400">Location: {{ event.location }}</p>
-                    <p class="text-sm text-gray-400">Guests: {{ event.guests }}</p>
+                    <div class="flex flex-row gap-9">
+                        <div>
+                            <p class="font-semibold text-white">{{ event.get_event_type_display }}</p>
+                            <p class="text-sm text-gray-400">Date: {{ event.date|date:"M d, Y" }}</p>
+                            <p class="text-sm text-gray-400">Time: {{ event.time|time:"H:i" }}</p>
+                            <p class="text-sm text-gray-400">Location: {{ event.location }}</p>
+                            <p class="text-sm text-gray-400">Guests: {{ event.guests }}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-400">{{ event.user.first_name }} {{event.user.last_name}}
+                            </p>
+                            <p class="text-sm text-gray-400">Email: {{ event.user.email}}</p>
+                            <p class="text-sm text-gray-400">Contact Number: {{ event.user.contact_number }}</p>
+                        </div>
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
+
             {% else %}
             <p class="text-gray-400">No new pending events.</p>
             {% endif %}
@@ -62,12 +85,16 @@
     <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-100 transform scale-95 opacity-0 transition-all duration-300">
         <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
         <div class="flex justify-between">
-            <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 mx-2 rounded"
-                onclick="handleEventAction('complete')">
+            <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 mx-2 rounded"
+                onclick="handleEventAction('confirm-booking')">
+                Confirm
+            </button>
+            <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 mx-2 rounded"
+                onclick="handleEventAction('complete-event')">
                 Completed
             </button>
             <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 mx-2 rounded"
-                onclick="handleEventAction('cancel')">
+                onclick="handleEventAction('cancel-booking')">
                 Cancel
             </button>
             <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 mx-2 rounded"
@@ -75,7 +102,7 @@
                 Edit
             </button>
             <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 mx-2 rounded"
-                onclick="handleEventAction('delete')">
+                onclick="handleEventAction('delete-booking')">
                 Delete
             </button>
         </div>
@@ -85,8 +112,6 @@
 
 
 <script>
-    let currentEventId = null;
-
     document.addEventListener('DOMContentLoaded', () => {
         const eventItems = document.querySelectorAll('.event-item');
         eventItems.forEach(item => {
@@ -126,10 +151,8 @@
     }
 
     function handleEventAction(action) {
-        if (action === 'cancel') {
-            updateBookingStatus(currentEventId, 'cancel');
-        } else if (action === 'complete') {
-            updateBookingStatus(currentEventId, 'complete');
+        if (action === 'cancel-booking' || action === 'complete-event' || action === 'delete-booking' || action === 'confirm-booking') {
+            updateBookingStatus(currentEventId, action);
         } else {
             console.log(`Action: ${action}, Event ID: ${currentEventId}`);
             closePopup();
@@ -137,8 +160,7 @@
     }
 
     function updateBookingStatus(bookingId, action) {
-        const url = action === 'cancel' ? `/admin-portal/cancel-booking/${bookingId}/` : `/admin-portal/complete-event/${bookingId}/`;
-        const actionVerb = action === 'cancel' ? 'cancelled' : 'completed';
+        const url = `/admin-portal/${action}/${bookingId}/`;
 
         fetch(url, {
             method: 'POST',
@@ -154,23 +176,70 @@
                 return response.json();
             })
             .then(data => {
-                console.log(`Event ${actionVerb} successfully:`, data);
-                // Remove the updated event from the list
-                const updatedEvent = document.querySelector(`.event-item[data-event-id="${bookingId}"]`);
-                if (updatedEvent) {
-                    updatedEvent.remove();
+                console.log('Server response:', data);
+                if (data.success) {
+                    const updatedEvent = document.querySelector(`.event-item[data-event-id="${bookingId}"]`);
+                    if (updatedEvent) {
+                        if (action === 'confirm-booking') {
+                            moveEventToConfirmed(updatedEvent);
+                        } else {
+                            updatedEvent.remove();
+                        }
+                    }
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.message, 'error');
+                    throw new Error(data.message || 'Unknown error occurred');
                 }
-                // Show a success message
-                showMessage(`Event ${actionVerb} successfully`, 'success');
             })
             .catch(error => {
-                console.error(`Error ${action}ing booking:`, error);
-                // Show an error message
-                showMessage(`Error ${action}ing booking. Please try again.`, 'error');
+                console.error(`Error updating booking:`, error);
+                showMessage(error.message || `Error updating booking. Please try again.`, 'error');
             })
             .finally(() => {
                 closePopup();
             });
+    }
+
+    function moveEventToConfirmed(eventElement) {
+        const confirmedEventsContainer = document.querySelector('.grid.grid-cols-2.gap-8 > div:first-child');
+        let confirmedEventsList = confirmedEventsContainer.querySelector('ul');
+        const noEventsMessage = confirmedEventsContainer.querySelector('p');
+
+        if (noEventsMessage) {
+            noEventsMessage.remove();
+        }
+
+        if (!confirmedEventsList) {
+            confirmedEventsList = document.createElement('ul');
+            confirmedEventsList.className = 'space-y-4';
+            confirmedEventsContainer.appendChild(confirmedEventsList);
+        }
+
+        confirmedEventsList.appendChild(eventElement);
+
+        // Update the event item to reflect its new status
+        const titleElement = eventElement.querySelector('p.font-semibold');
+        if (titleElement) {
+            titleElement.textContent += ' (Confirmed)';
+        }
+
+        // Remove the event from the pending events list
+        const pendingEventsList = document.querySelector('.grid.grid-cols-2.gap-8 > div:last-child ul');
+        if (pendingEventsList) {
+            const pendingEvent = pendingEventsList.querySelector(`.event-item[data-event-id="${eventElement.dataset.eventId}"]`);
+            if (pendingEvent) {
+                pendingEvent.remove();
+            }
+            // If the pending events list is now empty, add a "No new pending events" message
+            if (pendingEventsList.children.length === 0) {
+                const noEventsMessage = document.createElement('p');
+                noEventsMessage.className = 'text-gray-400';
+                noEventsMessage.textContent = 'No new pending events.';
+                pendingEventsList.parentNode.appendChild(noEventsMessage);
+                pendingEventsList.remove();
+            }
+        }
     }
 
     function showMessage(message, type) {
@@ -198,7 +267,6 @@
         }, 3000);
     }
 
-    // Function to get CSRF token from cookies
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

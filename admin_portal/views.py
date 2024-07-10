@@ -1,9 +1,10 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from accounts.models import CustomUser, BBQBooking
 from django.db.models import Count
 from django.utils import timezone
 from django.http import JsonResponse
+
 @staff_member_required
 def admin_dashboard(request):
     total_clients = CustomUser.objects.count()
@@ -38,18 +39,136 @@ def booking_list(request):
 
 @staff_member_required
 def cancel_booking(request, booking_id):
-    booking = BBQBooking.objects.get(id=booking_id)
-    booking.status = 2  # Cancelled
-    booking.save()
-    
-    #return successful message as a json response
-    return JsonResponse({'message': 'Booking cancelled successfully.'})
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        }, status=405)
+
+    try:
+        booking = get_object_or_404(BBQBooking, id=booking_id)
+        
+        if booking.status == 2:
+            return JsonResponse({
+                'success': False,
+                'message': 'Booking is already cancelled'
+            }, status=400)
+        
+        if booking.status == 3:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot cancel a completed booking'
+            }, status=400)
+        
+        booking.status = 2  # Cancelled
+        booking.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking successfully cancelled'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
 
 @staff_member_required
 def complete_event(request, booking_id):
-    booking = BBQBooking.objects.get(id=booking_id)
-    booking.status = 3
-    booking.save()
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        }, status=405)
 
-    return JsonResponse({'message': 'Event marked as Completed.'})
+    try:
+        booking = get_object_or_404(BBQBooking, id=booking_id)
+        
+        if booking.status == 3:
+            return JsonResponse({
+                'success': False,
+                'message': 'Event is already marked as completed'
+            }, status=400)
+        
+        if booking.status == 2:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot complete a cancelled booking'
+            }, status=400)
+        
+        booking.status = 3  # Completed
+        booking.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Event marked as completed'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
 
+@staff_member_required
+def delete_booking(request, booking_id):
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        }, status=405)
+
+    try:
+        booking = get_object_or_404(BBQBooking, id=booking_id)
+        booking.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking successfully deleted'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+
+@staff_member_required
+def confirm_booking(request, booking_id):
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        }, status=405)
+
+    try:
+        booking = get_object_or_404(BBQBooking, id=booking_id)
+        
+        if booking.status == 1:
+            return JsonResponse({
+                'success': False,
+                'message': 'Booking is already confirmed'
+            }, status=400)
+        
+        if booking.status == 2:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot confirm a cancelled booking'
+            }, status=400)
+        
+        if booking.status == 3:
+            return JsonResponse({
+                'success': False,
+                'message': 'Event already completed'
+            }, status=400)
+        
+        booking.status = 1  # Confirmed
+        booking.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking successfully confirmed'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
