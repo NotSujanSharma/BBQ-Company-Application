@@ -127,15 +127,20 @@
 
     function handleEventAction(action) {
         if (action === 'cancel') {
-            cancelBooking(currentEventId);
+            updateBookingStatus(currentEventId, 'cancel');
+        } else if (action === 'complete') {
+            updateBookingStatus(currentEventId, 'complete');
         } else {
             console.log(`Action: ${action}, Event ID: ${currentEventId}`);
             closePopup();
         }
     }
 
-    function cancelBooking(bookingId) {
-        fetch(`/admin-portal/cancel-booking/${bookingId}/`, {
+    function updateBookingStatus(bookingId, action) {
+        const url = action === 'cancel' ? `/admin-portal/cancel-booking/${bookingId}/` : `/admin-portal/complete-event/${bookingId}/`;
+        const actionVerb = action === 'cancel' ? 'cancelled' : 'completed';
+
+        fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken'),
@@ -149,19 +154,19 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Booking cancelled successfully:', data);
-                // Remove the cancelled event from the list
-                const cancelledEvent = document.querySelector(`.event-item[data-event-id="${bookingId}"]`);
-                if (cancelledEvent) {
-                    cancelledEvent.remove();
+                console.log(`Event ${actionVerb} successfully:`, data);
+                // Remove the updated event from the list
+                const updatedEvent = document.querySelector(`.event-item[data-event-id="${bookingId}"]`);
+                if (updatedEvent) {
+                    updatedEvent.remove();
                 }
                 // Show a success message
-                showMessage('Booking cancelled successfully', 'success');
+                showMessage(`Event ${actionVerb} successfully`, 'success');
             })
             .catch(error => {
-                console.error('Error cancelling booking:', error);
+                console.error(`Error ${action}ing booking:`, error);
                 // Show an error message
-                showMessage('Error cancelling booking. Please try again.', 'error');
+                showMessage(`Error ${action}ing booking. Please try again.`, 'error');
             })
             .finally(() => {
                 closePopup();

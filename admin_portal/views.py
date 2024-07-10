@@ -45,4 +45,11 @@ def cancel_booking(request, booking_id):
     #return successful message as a json response
     return JsonResponse({'message': 'Booking cancelled successfully.'})
 
+@staff_member_required
+def complete_event(request, booking_id):
+    booking = BBQBooking.objects.get(id=booking_id)
+    booking.status = 3
+    booking.save()
+
+    return JsonResponse({'message': 'Event marked as Completed.'})
 
