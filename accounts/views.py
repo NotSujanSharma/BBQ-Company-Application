@@ -108,6 +108,7 @@ def delete_booking(request, booking_id):
         if booking.user != request.user:
             return HttpResponseForbidden("You don't have permission to delete this booking.")
         
+        
         # Delete the booking
         if booking.status == 2:
 
@@ -136,6 +137,9 @@ def cancel_booking(request, booking_id):
             return HttpResponseForbidden("You don't have permission to cancel this booking.")
         
         # Cancel the booking
+        if booking.status == 3:
+            messages.error(request, "You can't cancel a booking that is already completed.")
+            return redirect(reverse('view_booked_events'))
         booking.status = 2
         booking.save()
         
@@ -153,8 +157,12 @@ def edit_booking(request, booking_id):
         return HttpResponseForbidden("You don't have permission to edit this booking.")
     
     if request.method == 'POST':
+        if booking.status == 3:
+            messages.error(request, "You can't edit a booking that is already completed.")
+            return redirect(reverse('view_booked_events'))
         form = BBQBookingForm(request.POST, instance=booking)
         if form.is_valid():
+            
             booking = form.save(commit=False)
             booking.user = request.user
             booking.status = 0  # Reset status to pending
