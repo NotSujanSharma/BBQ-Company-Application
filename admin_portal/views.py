@@ -3,6 +3,7 @@ from django.shortcuts import render
 from accounts.models import CustomUser, BBQBooking
 from django.db.models import Count
 from django.utils import timezone
+from django.http import JsonResponse
 @staff_member_required
 def admin_dashboard(request):
     total_clients = CustomUser.objects.count()
@@ -40,5 +41,8 @@ def cancel_booking(request, booking_id):
     booking = BBQBooking.objects.get(id=booking_id)
     booking.status = 2  # Cancelled
     booking.save()
-    return redirect('booking_list')
     
+    #return successful message as a json response
+    return JsonResponse({'message': 'Booking cancelled successfully.'})
+
+

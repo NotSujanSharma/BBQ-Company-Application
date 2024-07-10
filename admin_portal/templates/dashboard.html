@@ -91,7 +91,6 @@
         const eventItems = document.querySelectorAll('.event-item');
         eventItems.forEach(item => {
             item.addEventListener('click', () => {
-                console.log("clicked");
                 currentEventId = item.dataset.eventId;
                 const eventTitle = item.querySelector('p').textContent;
                 openPopup(eventTitle);
@@ -127,12 +126,87 @@
     }
 
     function handleEventAction(action) {
-        // Here you would typically send an AJAX request to your server
-        // to handle the action (complete, cancel, edit, or delete)
-        console.log(`Action: ${action}, Event ID: ${currentEventId}`);
+        if (action === 'cancel') {
+            cancelBooking(currentEventId);
+        } else {
+            console.log(`Action: ${action}, Event ID: ${currentEventId}`);
+            closePopup();
+        }
+    }
 
-        // For demonstration purposes, we'll just close the popup
-        closePopup();
+    function cancelBooking(bookingId) {
+        fetch(`/admin-portal/cancel-booking/${bookingId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Booking cancelled successfully:', data);
+                // Remove the cancelled event from the list
+                const cancelledEvent = document.querySelector(`.event-item[data-event-id="${bookingId}"]`);
+                if (cancelledEvent) {
+                    cancelledEvent.remove();
+                }
+                // Show a success message
+                showMessage('Booking cancelled successfully', 'success');
+            })
+            .catch(error => {
+                console.error('Error cancelling booking:', error);
+                // Show an error message
+                showMessage('Error cancelling booking. Please try again.', 'error');
+            })
+            .finally(() => {
+                closePopup();
+            });
+    }
+
+    function showMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = message;
+        messageDiv.classList.add('fixed', 'top-4', 'right-4', 'p-4', 'rounded', 'text-white', 'opacity-0', 'transition-opacity', 'duration-300');
+
+        if (type === 'success') {
+            messageDiv.classList.add('bg-green-600');
+        } else {
+            messageDiv.classList.add('bg-red-600');
+        }
+
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => {
+            messageDiv.classList.add('opacity-100');
+        }, 10);
+
+        setTimeout(() => {
+            messageDiv.classList.remove('opacity-100');
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>
 {% endblock %}
