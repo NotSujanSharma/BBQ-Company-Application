@@ -42,7 +42,8 @@
             {% if new_events %}
             <ul class="space-y-4">
                 {% for event in new_events %}
-                <li class="border-b border-gray-700 pb-4">
+                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 transition-colors duration-200 cursor-pointer event-item"
+                    data-event-id="{{ event.id }}">
                     <p class="font-semibold text-white">{{ event.get_event_type_display }}</p>
                     <p class="text-sm text-gray-400">Date: {{ event.date|date:"M d, Y" }}</p>
                     <p class="text-sm text-gray-400">Time: {{ event.time|time:"H:i" }}</p>
@@ -57,4 +58,81 @@
         </div>
     </div>
 </div>
+<div id="eventPopup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-100 transform scale-95 opacity-0 transition-all duration-300">
+        <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
+        <div class="flex justify-between">
+            <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 mx-2 rounded"
+                onclick="handleEventAction('complete')">
+                Completed
+            </button>
+            <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 mx-2 rounded"
+                onclick="handleEventAction('cancel')">
+                Cancel
+            </button>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 mx-2 rounded"
+                onclick="handleEventAction('edit')">
+                Edit
+            </button>
+            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 mx-2 rounded"
+                onclick="handleEventAction('delete')">
+                Delete
+            </button>
+        </div>
+        <button class="mt-4 text-gray-400 hover:text-white" onclick="closePopup()">Close</button>
+    </div>
+</div>
+
+
+<script>
+    let currentEventId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const eventItems = document.querySelectorAll('.event-item');
+        eventItems.forEach(item => {
+            item.addEventListener('click', () => {
+                console.log("clicked");
+                currentEventId = item.dataset.eventId;
+                const eventTitle = item.querySelector('p').textContent;
+                openPopup(eventTitle);
+            });
+        });
+    });
+
+    function openPopup(eventTitle) {
+        const popup = document.getElementById('eventPopup');
+        const popupContent = popup.querySelector('div');
+        document.getElementById('popupTitle').textContent = eventTitle;
+
+        popup.classList.remove('hidden');
+        popup.classList.add('flex');
+
+        setTimeout(() => {
+            popupContent.classList.remove('scale-95', 'opacity-0');
+            popupContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closePopup() {
+        const popup = document.getElementById('eventPopup');
+        const popupContent = popup.querySelector('div');
+
+        popupContent.classList.remove('scale-100', 'opacity-100');
+        popupContent.classList.add('scale-95', 'opacity-0');
+
+        setTimeout(() => {
+            popup.classList.remove('flex');
+            popup.classList.add('hidden');
+        }, 300);
+    }
+
+    function handleEventAction(action) {
+        // Here you would typically send an AJAX request to your server
+        // to handle the action (complete, cancel, edit, or delete)
+        console.log(`Action: ${action}, Event ID: ${currentEventId}`);
+
+        // For demonstration purposes, we'll just close the popup
+        closePopup();
+    }
+</script>
 {% endblock %}

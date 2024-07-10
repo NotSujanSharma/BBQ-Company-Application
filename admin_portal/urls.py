@@ -6,4 +6,5 @@ urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('clients/', views.client_list, name='admin_client_list'),
     path('bookings/', views.booking_list, name='admin_booking_list'),
+    path('cancel-booking/<int:booking_id>/', views.cancel_booking, name='admin_cancel_booking'),
 ]

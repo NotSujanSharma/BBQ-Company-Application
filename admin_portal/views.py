@@ -34,3 +34,11 @@ def client_list(request):
 def booking_list(request):
     bookings = BBQBooking.objects.all().order_by('-date')
     return render(request, 'bookings.html', {'bookings': bookings})
+
+@staff_member_required
+def cancel_booking(request, booking_id):
+    booking = BBQBooking.objects.get(id=booking_id)
+    booking.status = 2  # Cancelled
+    booking.save()
+    return redirect('booking_list')
+    
