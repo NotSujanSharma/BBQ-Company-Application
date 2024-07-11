@@ -12,7 +12,10 @@
     <div class="grid grid-cols-2 gap-4 mb-8">
         <div class="bg-gray-800 rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold mb-2 text-gray-400">Total Clients</h2>
-            <p class="text-3xl font-bold text-white">{{ total_clients }}</p>
+            <div class="flex items-center">
+                <p class="text-3xl font-bold text-white">{{ total_clients }}</p>
+                <p class="ml-4 text-lg  text-blue-400">+{{ new_clients_this_month }} this month</p>
+            </div>
         </div>
         <div class="bg-gray-800 rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold mb-2 text-gray-400">Total Bookings</h2>
@@ -85,26 +88,30 @@
     </div>
 </div>
 <div id="eventPopup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-100 transform scale-95 opacity-0 transition-all duration-300">
+    <div
+        class="bg-gray-800 p-6 rounded-lg shadow-xl w-3/4 max-w-2xl transform scale-95 opacity-0 transition-all duration-300 overflow-y-auto max-h-[90vh]">
         <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
-        <div class="flex justify-between">
-            <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 mx-2 rounded"
+        <div id="bookingDetails" class="mb-6 text-gray-300">
+            <!-- Booking details will be inserted here -->
+        </div>
+        <div class="flex flex-wrap justify-between">
+            <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 m-2 rounded"
                 onclick="handleEventAction('confirm-booking')">
                 Confirm
             </button>
-            <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 mx-2 rounded"
+            <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 m-2 rounded"
                 onclick="handleEventAction('complete-event')">
                 Completed
             </button>
-            <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 mx-2 rounded"
+            <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 m-2 rounded"
                 onclick="handleEventAction('cancel-booking')">
                 Cancel
             </button>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 mx-2 rounded"
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded"
                 onclick="handleEventAction('edit')">
                 Edit
             </button>
-            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 mx-2 rounded"
+            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 m-2 rounded"
                 onclick="handleEventAction('delete-booking')">
                 Delete
             </button>
@@ -114,53 +121,163 @@
 </div>
 
 
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const eventItems = document.querySelectorAll('.event-item');
-        eventItems.forEach(item => {
-            item.addEventListener('click', () => {
-                currentEventId = item.dataset.eventId;
-                const eventTitle = item.querySelector('p').textContent;
-                openPopup(eventTitle);
+    let currentEventId;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const eventItems = document.querySelectorAll('.event-item');
+            eventItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    currentEventId = item.dataset.eventId;
+                    const eventTitle = item.querySelector('p').textContent;
+                    openPopup(eventTitle);
+                    fetchBookingDetails(currentEventId);
+                });
             });
         });
-    });
 
-    function openPopup(eventTitle) {
-        const popup = document.getElementById('eventPopup');
-        const popupContent = popup.querySelector('div');
-        document.getElementById('popupTitle').textContent = eventTitle;
+     function openPopup(eventTitle) {
+            const popup = document.getElementById('eventPopup');
+            const popupContent = popup.querySelector('div');
+            document.getElementById('popupTitle').textContent = eventTitle;
 
-        popup.classList.remove('hidden');
-        popup.classList.add('flex');
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
 
-        setTimeout(() => {
-            popupContent.classList.remove('scale-95', 'opacity-0');
-            popupContent.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    }
+            setTimeout(() => {
+                popupContent.classList.remove('scale-95', 'opacity-0');
+                popupContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
 
     function closePopup() {
-        const popup = document.getElementById('eventPopup');
-        const popupContent = popup.querySelector('div');
+            const popup = document.getElementById('eventPopup');
+            const popupContent = popup.querySelector('div');
 
-        popupContent.classList.remove('scale-100', 'opacity-100');
-        popupContent.classList.add('scale-95', 'opacity-0');
+            popupContent.classList.remove('scale-100', 'opacity-100');
+            popupContent.classList.add('scale-95', 'opacity-0');
 
-        setTimeout(() => {
-            popup.classList.remove('flex');
-            popup.classList.add('hidden');
-        }, 300);
-    }
+            setTimeout(() => {
+                popup.classList.remove('flex');
+                popup.classList.add('hidden');
+            }, 300);
+        }
+    function fetchBookingDetails(bookingId) {
+            const url = `/admin-portal/booking-details/${bookingId}/`;
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayBookingDetails(data.booking);
+                    } else {
+                        showMessage('Failed to fetch booking details', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching booking details:', error);
+                    showMessage('Error fetching booking details. Please try again.', 'error');
+                });
+        }
+     function displayBookingDetails(booking) {
+            const detailsContainer = document.getElementById('bookingDetails');
+            detailsContainer.innerHTML = `
+            <div class="flex flex-row">
+                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-3 text-white">Event Details</h4>
+                    <p class="mb-2"><span class="font-medium">Event Type:</span> ${booking.event_type}</p>
+                    <p class="mb-2"><span class="font-medium">Date:</span> ${formatDate(booking.date)}</p>
+                    <p class="mb-2"><span class="font-medium">Time:</span> ${formatTime(booking.time)}</p>
+                    <p class="mb-2"><span class="font-medium">Location:</span> ${booking.location}</p>
+                    <p class="mb-2"><span class="font-medium">Guests:</span> ${booking.guests}</p>
+                    <p class="mb-2"><span class="font-medium">Status:</span> <span class="${getStatusColor(booking.status)}">${getStatusString(booking.status)}</span></p>
+                </div>
+                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-3 text-white">Client Information</h4>
+                    <p class="mb-2"><span class="font-medium">Name:</span> ${booking.user.first_name} ${booking.user.last_name}</p>
+                    <p class="mb-2"><span class="font-medium">Email:</span> ${booking.user.email}</p>
+                    <p class="mb-2"><span class="font-medium">Contact:</span> ${booking.user.contact_number}</p>
+                </div>
+            </div>
+            <div class="bg-cool-gray-700 p-4 rounded-lg col-span-full">
+                <h4 class="text-lg font-semibold mb-3 text-white">Menu</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h5 class="font-medium mb-2">Main Dishes</h5>
+                        ${formatJSONField(booking.main_dishes)}
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Side Dishes</h5>
+                        ${formatJSONField(booking.side_dishes)}
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Desserts</h5>
+                        ${formatJSONField(booking.desserts)}
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Drinks</h5>
+                        <p>${booking.drinks}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        function formatJSONField(jsonField) {
+            return Object.entries(jsonField)
+                .map(([key, value]) => `<p class="mb-1">${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}</p>`)
+                .join('');
+        }
+
+        function getStatusString(status) {
+            const statusMap = {
+                0: 'Pending',
+                1: 'Confirmed',
+                2: 'Cancelled',
+                3: 'Completed'
+            };
+            return statusMap[status] || 'Unknown';
+        }
+
+        function getStatusColor(status) {
+            const colorMap = {
+                0: 'text-yellow-400',
+                1: 'text-green-400',
+                2: 'text-red-400',
+                3: 'text-blue-400'
+            };
+            return colorMap[status] || 'text-gray-400';
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function formatTime(timeString) {
+            const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+            return new Date(`1970-01-01T${timeString}`).toLocaleTimeString(undefined, options);
+        }
 
     function handleEventAction(action) {
-        if (action === 'cancel-booking' || action === 'complete-event' || action === 'delete-booking' || action === 'confirm-booking') {
-            updateBookingStatus(currentEventId, action);
-        } else {
-            console.log(`Action: ${action}, Event ID: ${currentEventId}`);
-            closePopup();
+            if (action === 'cancel-booking' || action === 'complete-event' || action === 'delete-booking' || action === 'confirm-booking') {
+                updateBookingStatus(currentEventId, action);
+            }
+            else if (action === 'edit') {
+                window.location.href = `/admin-portal/edit-booking/${currentEventId}/`;
+            }
+            else {
+                console.log(`Action: ${action}, Event ID: ${currentEventId}`);
+                closePopup();
+            }
         }
-    }
 
     function updateBookingStatus(bookingId, action) {
         const url = `/admin-portal/${action}/${bookingId}/`;

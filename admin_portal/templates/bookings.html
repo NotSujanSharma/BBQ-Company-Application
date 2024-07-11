@@ -44,40 +44,41 @@
             </thead>
             <tbody>
                 {% for booking in bookings %}
-                <tr class="hover:bg-gray-700 transition-colors duration-200">
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
-                        {%if booking.status == 0 %}
-                        <span class="text-yellow-400">pending</span>
-                        {%elif booking.status == 1 %}
+                <tr class="hover:bg-gray-700 bg-gray-800 transition-colors duration-200 cursor-pointer booking-item"
+                    data-booking-id="{{ booking.id }}">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
+                        {% if booking.status == 0 %}
+                        <span class="text-yellow-400">Pending</span>
+                        {% elif booking.status == 1 %}
                         <span class="text-green-400">Confirmed</span>
-                        {%elif booking.status == 2 %}
+                        {% elif booking.status == 2 %}
                         <span class="text-red-400">Cancelled</span>
-                        {%else%}
+                        {% else %}
                         <span class="text-blue-400">Completed</span>
-                        {%endif%}
+                        {% endif %}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.date|date:"M d, Y" }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.time|time:"H:i" }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.get_event_type_display }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.location }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.guests }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.user.first_name }} {{ booking.user.last_name }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm text-center">
+                    <td colspan="7" class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm text-center">
                         No bookings found.
                     </td>
                 </tr>
@@ -86,4 +87,283 @@
         </table>
     </div>
 </div>
+
+<!-- Popup Window -->
+<div id="bookingPopup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div
+        class="bg-gray-800 p-6 rounded-lg shadow-xl w-3/4 max-w-2xl transform scale-95 opacity-0 transition-all duration-300 overflow-y-auto max-h-[90vh]">
+        <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
+        <div id="bookingDetails" class="mb-6 text-gray-300">
+            <!-- Booking details will be inserted here -->
+        </div>
+        <div class="flex flex-wrap justify-between">
+            <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('confirm-booking')">
+                Confirm
+            </button>
+            <button class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('complete-event')">
+                Completed
+            </button>
+            <button class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('cancel-booking')">
+                Cancel
+            </button>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('edit')">
+                Edit
+            </button>
+            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('delete-booking')">
+                Delete
+            </button>
+        </div>
+        <button class="mt-4 text-gray-400 hover:text-white" onclick="closePopup()">Close</button>
+    </div>
+</div>
+
+<script>
+    let currentBookingId;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bookingItems = document.querySelectorAll('.booking-item');
+        bookingItems.forEach(item => {
+            item.addEventListener('click', () => {
+                currentBookingId = item.dataset.bookingId;
+                const eventType = item.querySelector('td:nth-child(4)').textContent.trim();
+                openPopup(eventType);
+                fetchBookingDetails(currentBookingId);
+            });
+        });
+    });
+
+    function openPopup(eventType) {
+        const popup = document.getElementById('bookingPopup');
+        const popupContent = popup.querySelector('div');
+        document.getElementById('popupTitle').textContent = eventType;
+
+        popup.classList.remove('hidden');
+        popup.classList.add('flex');
+
+        setTimeout(() => {
+            popupContent.classList.remove('scale-95', 'opacity-0');
+            popupContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closePopup() {
+        const popup = document.getElementById('bookingPopup');
+        const popupContent = popup.querySelector('div');
+
+        popupContent.classList.remove('scale-100', 'opacity-100');
+        popupContent.classList.add('scale-95', 'opacity-0');
+
+        setTimeout(() => {
+            popup.classList.remove('flex');
+            popup.classList.add('hidden');
+        }, 300);
+    }
+
+    function fetchBookingDetails(bookingId) {
+        const url = `/admin-portal/booking-details/${bookingId}/`;
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayBookingDetails(data.booking);
+                } else {
+                    showMessage('Failed to fetch booking details', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching booking details:', error);
+                showMessage('Error fetching booking details. Please try again.', 'error');
+            });
+    }
+
+    function displayBookingDetails(booking) {
+        const detailsContainer = document.getElementById('bookingDetails');
+        detailsContainer.innerHTML = `
+            <div class="flex flex-row">
+                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-3 text-white">Event Details</h4>
+                    <p class="mb-2"><span class="font-medium">Event Type:</span> ${booking.event_type}</p>
+                    <p class="mb-2"><span class="font-medium">Date:</span> ${formatDate(booking.date)}</p>
+                    <p class="mb-2"><span class="font-medium">Time:</span> ${formatTime(booking.time)}</p>
+                    <p class="mb-2"><span class="font-medium">Location:</span> ${booking.location}</p>
+                    <p class="mb-2"><span class="font-medium">Guests:</span> ${booking.guests}</p>
+                    <p class="mb-2"><span class="font-medium">Status:</span> <span class="${getStatusColor(booking.status)}">${getStatusString(booking.status)}</span></p>
+                </div>
+                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-3 text-white">Client Information</h4>
+                    <p class="mb-2"><span class="font-medium">Name:</span> ${booking.user.first_name} ${booking.user.last_name}</p>
+                    <p class="mb-2"><span class="font-medium">Email:</span> ${booking.user.email}</p>
+                    <p class="mb-2"><span class="font-medium">Contact:</span> ${booking.user.contact_number}</p>
+                </div>
+            </div>
+            <div class="bg-cool-gray-700 p-4 rounded-lg col-span-full">
+                <h4 class="text-lg font-semibold mb-3 text-white">Menu</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h5 class="font-medium mb-2">Main Dishes</h5>
+                        ${formatJSONField(booking.main_dishes)}
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Side Dishes</h5>
+                        ${formatJSONField(booking.side_dishes)}
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Desserts</h5>
+                        ${formatJSONField(booking.desserts)}
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Drinks</h5>
+                        <p>${booking.drinks}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function formatJSONField(jsonField) {
+        return Object.entries(jsonField)
+            .map(([key, value]) => `<p class="mb-1">${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}</p>`)
+            .join('');
+    }
+
+    function getStatusString(status) {
+        const statusMap = {
+            0: 'Pending',
+            1: 'Confirmed',
+            2: 'Cancelled',
+            3: 'Completed'
+        };
+        return statusMap[status] || 'Unknown';
+    }
+
+    function getStatusColor(status) {
+        const colorMap = {
+            0: 'text-yellow-400',
+            1: 'text-green-400',
+            2: 'text-red-400',
+            3: 'text-blue-400'
+        };
+        return colorMap[status] || 'text-gray-400';
+    }
+
+    function formatDate(dateString) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
+    function formatTime(timeString) {
+        const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+        return new Date(`1970-01-01T${timeString}`).toLocaleTimeString(undefined, options);
+    }
+    function handleEventAction(action) {
+            if (action === 'cancel-booking' || action === 'complete-event' || action === 'delete-booking' || action === 'confirm-booking') {
+                updateBookingStatus(currentBookingId, action);
+            }
+            else if (action === 'edit') {
+                window.location.href = `/admin-portal/edit-booking/${currentBookingId}/`;
+            }
+            else {
+                console.log(`Action: ${action}, Event ID: ${currentBookingId}`);
+                closePopup();
+            }
+        }
+
+        function updateBookingStatus(bookingId, action) {
+            const url = `/admin-portal/${action}/${bookingId}/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Server response:', data);
+                    if (data.success) {
+                        const updatedEvent = document.querySelector(`.event-item[data-event-id="${bookingId}"]`);
+                        if (updatedEvent) {
+                            if (action === 'confirm-booking') {
+                                moveEventToConfirmed(updatedEvent);
+                            } else {
+                                updatedEvent.remove();
+                            }
+                        }
+                        showMessage(data.message, 'success');
+                    } else {
+                        showMessage(data.message, 'error');
+                        throw new Error(data.message || 'Unknown error occurred');
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error updating booking:`, error);
+                    showMessage(error.message || `Error updating booking. Please try again.`, 'error');
+                })
+                .finally(() => {
+                    closePopup();
+                    // refresh page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
+                });
+        }
+
+    function showMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = message;
+        messageDiv.classList.add('fixed', 'top-4', 'right-4', 'p-4', 'rounded', 'text-white', 'opacity-0', 'transition-opacity', 'duration-300');
+
+        if (type === 'success') {
+            messageDiv.classList.add('bg-green-600');
+        } else {
+            messageDiv.classList.add('bg-red-600');
+        }
+
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => {
+            messageDiv.classList.add('opacity-100');
+        }, 10);
+
+        setTimeout(() => {
+            messageDiv.classList.remove('opacity-100');
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}

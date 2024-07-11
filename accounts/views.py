@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import login, authenticate, logout
-from .forms import SignupForm, LoginForm, UserProfileForm, BBQBookingForm 
+from .forms import SignupForm, LoginForm, UserProfileForm, BBQBookingForm
+from django.views.decorators.http import require_GET 
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.contrib import messages
 from .models import BBQBooking
+
 
 def signup(request):
     if request.method == 'POST':
@@ -140,6 +142,10 @@ def cancel_booking(request, booking_id):
         if booking.status == 3:
             messages.error(request, "You can't cancel a booking that is already completed.")
             return redirect(reverse('view_booked_events'))
+
+        if booking.status == 1:
+            messages.error(request, "This booking is already confirmed. Please contact us to cancel this booking.")
+            return redirect(reverse('view_booked_events'))
         booking.status = 2
         booking.save()
         
@@ -160,6 +166,10 @@ def edit_booking(request, booking_id):
         if booking.status == 3:
             messages.error(request, "You can't edit a booking that is already completed.")
             return redirect(reverse('view_booked_events'))
+        if booking.status==1:
+            messages.error(request, "Booking is already confirmed, Please contact us to edit this booking")
+            return redirect(reverse('view_booked_events'))
+
         form = BBQBookingForm(request.POST, instance=booking)
         if form.is_valid():
             
@@ -201,3 +211,32 @@ def edit_booking(request, booking_id):
         form = BBQBookingForm(instance=booking)
     
     return render(request, 'edit_booking.html', {'form': form, 'booking': booking})
+
+@require_GET
+def get_booking_details(request, booking_id):
+    try:
+        booking = BBQBooking.objects.select_related('user').get(id=booking_id)
+        data = {
+            'success': True,
+            'booking': {
+                'event_type': booking.get_event_type_display(),
+                'date': booking.date.strftime('%Y-%m-%d'),
+                'time': booking.time.strftime('%H:%M'),
+                'location': booking.location,
+                'guests': booking.guests,
+                'status': booking.status,
+                'main_dishes': booking.main_dishes,
+                'side_dishes': booking.side_dishes,
+                'desserts': booking.desserts,
+                'drinks': booking.drinks,
+                'user': {
+                    'first_name': booking.user.first_name,
+                    'last_name': booking.user.last_name,
+                    'email': booking.user.email,
+                    'contact_number': booking.user.contact_number,
+                }
+            }
+        }
+        return JsonResponse(data)
+    except BBQBooking.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Booking not found'}, status=404)

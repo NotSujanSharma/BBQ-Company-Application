@@ -1,15 +1,22 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from accounts.models import CustomUser, BBQBooking
 from django.db.models import Count
 from django.utils import timezone
 from django.http import JsonResponse
+from django.urls import reverse
+from accounts.forms import BBQBookingForm
 
 @staff_member_required
 def admin_dashboard(request):
     total_clients = CustomUser.objects.count()
     total_bookings = BBQBooking.objects.count()
-    
+    current_month = timezone.now().month
+    current_year = timezone.now().year
+    new_clients_this_month = CustomUser.objects.filter(
+        date_joined__month=current_month,
+        date_joined__year=current_year
+    ).count()
     # Upcoming confirmed events (status = 1, date >= today)
     upcoming_events = BBQBooking.objects.filter(
         status=1, 
@@ -21,6 +28,7 @@ def admin_dashboard(request):
     
     context = {
         'total_clients': total_clients,
+        'new_clients_this_month': new_clients_this_month,
         'total_bookings': total_bookings,
         'upcoming_events': upcoming_events,
         'new_events': new_events,
@@ -172,3 +180,54 @@ def confirm_booking(request, booking_id):
             'success': False,
             'message': f'An error occurred: {str(e)}'
         }, status=500)
+
+@staff_member_required
+def edit_booking(request, booking_id):
+    booking = get_object_or_404(BBQBooking, id=booking_id)
+    
+    # Ensure the user owns this booking
+    
+    if request.method == 'POST':
+        if booking.status == 3:
+            messages.error(request, "You can't edit a booking that is already completed.")
+            return redirect(reverse('view_booked_events'))
+        form = BBQBookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            
+            booking = form.save(commit=False)
+            booking.user = request.user
+            booking.drinks = form.cleaned_data['guests']
+            booking.event_type = form.cleaned_data['event_type']
+            # Process main dishes
+            main_dishes = {}
+            for dish in form.MAIN_DISHES:
+                dish_key = f'main_dish_{dish[0]}'
+                count_key = f'main_dish_{dish[0]}_count'
+                if dish_key in request.POST and request.POST.get(count_key):
+                    main_dishes[dish[0]] = int(request.POST.get(count_key))
+            booking.main_dishes = main_dishes
+
+            # Process side dishes
+            side_dishes = {}
+            for dish in form.SIDE_DISHES:
+                dish_key = f'side_dish_{dish[0]}'
+                count_key = f'side_dish_{dish[0]}_count'
+                if dish_key in request.POST and request.POST.get(count_key):
+                    side_dishes[dish[0]] = int(request.POST.get(count_key))
+            booking.side_dishes = side_dishes
+
+            # Process desserts
+            desserts = {}
+            for dessert in form.DESSERTS:
+                dessert_key = f'dessert_{dessert[0]}'
+                count_key = f'dessert_{dessert[0]}_count'
+                if dessert_key in request.POST and request.POST.get(count_key):
+                    desserts[dessert[0]] = int(request.POST.get(count_key))
+            booking.desserts = desserts
+
+            booking.save()
+            return redirect(reverse('admin_dashboard'))
+    else:
+        form = BBQBookingForm(instance=booking)
+    
+    return render(request, 'admin_edit_booking.html', {'form': form, 'booking': booking})
