@@ -1,16 +1,68 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Profile{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
 {% block content %}
-<!-- Your page-specific content here -->
-
-
-    <h2>Your Profile</h2>
-    <p>Name: {{ user.get_full_name }}</p>
-    <p>Email: {{ user.email }}</p>
-    <p>Contact Number: {{ user.contact_number }}</p>
-    <p>Address: {{ user.address }}</p>
-    <a href="{% url 'update_profile' %}">Update Profile</a>
-    <br>
-    <a href="{% url 'logout' %}">Logout</a>
-
+<div class="min-h-screen bg-black-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-700">
+                <h2 class="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
+                    Your Profile
+                </h2>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-400">
+                            Name
+                        </dt>
+                        <dd class="mt-1 text-lg font-semibold text-white">
+                            {{ user.get_full_name }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-400">
+                            Email
+                        </dt>
+                        <dd class="mt-1 text-lg font-semibold text-white">
+                            {{ user.email }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-400">
+                            Contact Number
+                        </dt>
+                        <dd class="mt-1 text-lg font-semibold text-white">
+                            {{ user.contact_number }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-400">
+                            Address
+                        </dt>
+                        <dd class="mt-1 text-lg font-semibold text-white">
+                            {{ user.address }}
+                        </dd>
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 py-4 sm:px-6 bg-gray-700 flex justify-end space-x-3">
+                <a href="{% url 'update_profile' %}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Edit Profile
+                </a>
+                <a href="{% url 'logout' %}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

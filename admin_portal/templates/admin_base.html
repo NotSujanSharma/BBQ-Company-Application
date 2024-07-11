@@ -5,100 +5,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Your Site Name{% endblock %}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <title>{% block title %}Admin Portal{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-
-        .nav-link {
-            @apply px-3 py-2 rounded-md text-sm font-medium;
-        }
-
-        .nav-link:hover {
-            @apply bg-gray-700 text-white;
-        }
-
-        .sidebar {
-            @apply bg-gray-800 w-64 fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out;
-        }
-
-        .sidebar.hidden {
-            @apply -translate-x-full;
-        }
-
-        .mobile-menu-button {
-            @apply md:hidden;
-        }
-
-        @media (min-width: 768px) {
-            .sidebar {
-                @apply translate-x-0;
-            }
-
-            .mobile-menu-button {
-                @apply hidden;
-            }
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
 
-<body class="flex flex-col min-h-screen">
-    <header class="bg-gray-800">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-            <h2 class="text-white text-xl mx-auto">Admin Portal</h2>
-            <button id="mobile-menu-button" class="mobile-menu-button text-white focus:outline-none hidden sm:block">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
-                    </path>
-                </svg>
-            </button>
-        </nav>
-    </header>
-
-    <div class="flex">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <div id="sidebar" class="sidebar md:relative hidden md:block">
-            <div class="w-40 p-4 bg-gray-800 min-h-screen">
-                <ul>
-                    <li><a href="{% url 'admin_dashboard' %}"
-                            class="text-gray-300 hover:text-white block py-2">Dashboard</a>
-                    </li>
-                    <li><a href="{% url 'admin_client_list' %}"
-                            class="text-gray-300 hover:text-white block py-2">Clients</a>
-                    </li>
-                    <li><a href="{% url 'admin_booking_list' %}"
-                            class="text-gray-300 hover:text-white block py-2">Bookings</a>
-                    </li>
-                    <li><a href="{% url 'logout' %}" class="text-gray-300 hover:text-white block py-2">Logout</a></li>
-                </ul>
+        <aside id="sidebar"
+            class="bg-blue-600 dark:bg-gray-800 text-white w-64 min-h-screen overflow-y-auto transition-all duration-300 ease-in-out transform -translate-x-full md:translate-x-0">
+            <div class="p-6">
+                <h2 class="text-2xl font-semibold">Admin Portal</h2>
             </div>
-        </div>
-
-
+            <nav class="mt-6">
+                <a href="{% url 'admin_dashboard' %}"
+                    class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="{% url 'admin_client_list' %}"
+                    class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Clients
+                </a>
+                <a href="{% url 'admin_booking_list' %}"
+                    class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Bookings
+                </a>
+                <a href="{% url 'logout' %}"
+                    class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                </a>
+            </nav>
+        </aside>
 
         <!-- Main content -->
-        <main class="flex-1 p-10 ml-64 md:ml-0">
-            {% block admin_content %}
-            {% endblock %}
-        </main>
-    </div>
-
-    <footer class="bg-gray-800 mt-8">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-400 text-sm">
-                &copy; {% now "Y" %} BrokenAI LLC. All rights reserved. Designed by Sujan Sharma
-            </p>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white dark:bg-gray-800 shadow">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {% block header_title %}Dashboard{%endblock %}</h1>
+                    <button id="mobile-menu-button"
+                        class="md:hidden bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 p-2 rounded-md focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {% block admin_content %}
+                    {% endblock %}
+                </div>
+            </main>
         </div>
-    </footer>
+    </div>
 
     <script>
         document.getElementById('mobile-menu-button').addEventListener('click', function () {
             var sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('-translate-x-full');
         });
     </script>
 </body>

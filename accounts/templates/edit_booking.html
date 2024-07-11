@@ -1,105 +1,125 @@
+{%extends 'base.html'%}
 {% load custom_filters %}
+
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% block title %}Edit Booking{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Booking</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+
+{% block extra_head %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { "50": "#eff6ff", "100": "#dbeafe", "200": "#bfdbfe", "300": "#93c5fd", "400": "#60a5fa", "500": "#3b82f6", "600": "#2563eb", "700": "#1d4ed8", "800": "#1e40af", "900": "#1e3a8a", "950": "#172554" }
+                    }
+                }
+            }
         }
+    </script>
+{%endblock%}
+{% block content %}
 
-        h2,
-        h3 {
-            color: #333;
-        }
+<div class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <h2 class="text-3xl font-bold mb-8 text-center text-primary-400">Edit Your BBQ Booking</h2>
+        <form id="bbqForm" method="post" class="space-y-8">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
 
-        .dish-section {
-            margin-bottom: 20px;
-        }
-
-        .dish-item {
-            margin-bottom: 10px;
-        }
-
-        input[type="number"] {
-            width: 50px;
-        }
-
-        .error {
-            color: red;
-            font-size: 0.9em;
-        }
-    </style>
-</head>
-
-<body>
-    <h2>Edit Booking</h2>
-    <form id="bbqForm" method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div>
-            {{ form.date.label_tag }} {{ form.date }}
-        </div>
-        <div>
-            {{ form.time.label_tag }} {{ form.time }}
-        </div>
-        <div>
-            {{ form.location.label_tag }} {{ form.location }}
-        </div>
-        <div>
-            {{ form.guests.label_tag }} {{ form.guests }}
-        </div>
-        <div>
-            {{ form.event_type.label_tag }} {{ form.event_type }}
-        </div>
-        
-
-        <h3>Main Dishes</h3>
-        <div id="mainDishes" class="dish-section">
-            {% for dish in form.MAIN_DISHES %}
-            <div class="dish-item">
-                <input type="checkbox" id="main_dish_{{ dish.0 }}" name="main_dish_{{ dish.0 }}" {% if dish.0 in booking.main_dishes %}checked{% endif %}>
-                <label for="main_dish_{{ dish.0 }}">{{ dish.1 }}</label>
-                <input type="number" id="main_dish_{{ dish.0 }}_count" name="main_dish_{{ dish.0 }}_count" min="0"
-                    value="{{ booking.main_dishes|get_item:dish.0|default:0 }}">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label for="{{ form.date.id_for_label }}" class="mb-2 font-semibold">{{ form.date.label }}</label>
+                        {{ form.date|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="{{ form.time.id_for_label }}" class="mb-2 font-semibold">{{ form.time.label }}</label>
+                        {{ form.time|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="{{ form.location.id_for_label }}" class="mb-2 font-semibold">{{ form.location.label }}</label>
+                        {{ form.location|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label for="{{ form.guests.id_for_label }}" class="mb-2 font-semibold">{{ form.guests.label }}</label>
+                        {{ form.guests|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="{{ form.event_type.id_for_label }}" class="mb-2 font-semibold">{{ form.event_type.label}}</label>
+                        {{ form.event_type|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                </div>
             </div>
-            {% endfor %}
-        </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-primary-400">Main Dishes</h3>
+                    <div id="mainDishes" class="space-y-3">
+                        {% for dish in form.MAIN_DISHES %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="main_dish_{{ dish.0 }}" name="main_dish_{{ dish.0 }}" {% if dish.0 in booking.main_dishes %}checked{% endif %}
+                                    class="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-600 bg-gray-700">
+                                <label for="main_dish_{{ dish.0 }}" class="ml-2">{{ dish.1 }}</label>
+                            </div>
+                            <input type="number" id="main_dish_{{ dish.0 }}_count" name="main_dish_{{ dish.0 }}_count"
+                                min="0" value="{{ booking.main_dishes|get_item:dish.0|default:0 }}"
+                                class="bg-gray-700 text-white rounded-md p-1 w-16 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
-        <h3>Side Dishes</h3>
-        <div id="sideDishes" class="dish-section">
-            {% for dish in form.SIDE_DISHES %}
-            <div class="dish-item">
-                <input type="checkbox" id="side_dish_{{ dish.0 }}" name="side_dish_{{ dish.0 }}" {% if dish.0 in booking.side_dishes %}checked{% endif %}>
-                <label for="side_dish_{{ dish.0 }}">{{ dish.1 }}</label>
-                <input type="number" id="side_dish_{{ dish.0 }}_count" name="side_dish_{{ dish.0 }}_count" min="0"
-                    value="{{ booking.side_dishes|get_item:dish.0|default:0 }}">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-primary-400">Side Dishes</h3>
+                    <div id="sideDishes" class="space-y-3">
+                        {% for dish in form.SIDE_DISHES %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="side_dish_{{ dish.0 }}" name="side_dish_{{ dish.0 }}" {% if dish.0 in booking.side_dishes %}checked{% endif %}
+                                    class="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-600 bg-gray-700">
+                                <label for="side_dish_{{ dish.0 }}" class="ml-2">{{ dish.1 }}</label>
+                            </div>
+                            <input type="number" id="side_dish_{{ dish.0 }}_count" name="side_dish_{{ dish.0 }}_count"
+                                min="0" value="{{ booking.side_dishes|get_item:dish.0|default:0 }}"
+                                class="bg-gray-700 text-white rounded-md p-1 w-16 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-primary-400">Desserts</h3>
+                    <div id="desserts" class="space-y-3">
+                        {% for dessert in form.DESSERTS %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="dessert_{{ dessert.0 }}" name="dessert_{{ dessert.0 }}" {% if dessert.0 in booking.desserts %}checked{% endif %}
+                                    class="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-600 bg-gray-700">
+                                <label for="dessert_{{ dessert.0 }}" class="ml-2">{{ dessert.1 }}</label>
+                            </div>
+                            <input type="number" id="dessert_{{ dessert.0 }}_count" name="dessert_{{ dessert.0 }}_count"
+                                min="0" value="{{ booking.desserts|get_item:dessert.0|default:0 }}"
+                                class="bg-gray-700 text-white rounded-md p-1 w-16 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
-            {% endfor %}
-        </div>
 
-        <h3>Desserts</h3>
-        <div id="desserts" class="dish-section">
-            {% for dessert in form.DESSERTS %}
-            <div class="dish-item">
-                <input type="checkbox" id="dessert_{{ dessert.0 }}" name="dessert_{{ dessert.0 }}" {% if dessert.0 in booking.desserts %}checked{% endif %}>
-                <label for="dessert_{{ dessert.0 }}">{{ dessert.1 }}</label>
-                <input type="number" id="dessert_{{ dessert.0 }}_count" name="dessert_{{ dessert.0 }}_count" min="0"
-                    value="{{ booking.desserts|get_item:dessert.0|default:0 }}">
+            <div class="flex justify-center mt-8">
+                <button type="submit"
+                    class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    Update Booking
+                </button>
             </div>
-            {% endfor %}
-        </div>
-
-        <button type="submit">Update</button>
-    </form>
-
+        </form>
+    </div>
+    {%block extra_js%}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const guestsInput = document.getElementById('id_guests');
@@ -110,7 +130,7 @@
             function createErrorElement(id) {
                 const errorElement = document.createElement('div');
                 errorElement.id = id;
-                errorElement.className = 'error';
+                errorElement.className = 'text-red-500 text-sm mt-1';
                 return errorElement;
             }
 
@@ -175,6 +195,6 @@
             validateForm();
         });
     </script>
-</body>
-
-</html>
+</div>
+{%endblock%}
+{%endblock%}

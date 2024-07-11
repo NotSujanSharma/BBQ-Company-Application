@@ -3,8 +3,11 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block admin_content %}
+
 <div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
-    <h1 class="text-2xl font-bold mb-6 text-white">Dashboard</h1>
+    <h1 class="text-2xl font-bold mb-6 text-white">
+        {% block header_title %}Dashboard{%endblock %}
+    </h1>
 
     <div class="grid grid-cols-2 gap-4 mb-8">
         <div class="bg-gray-800 rounded-lg shadow-md p-6">
@@ -23,7 +26,7 @@
             {% if upcoming_events %}
             <ul class="space-y-4">
                 {% for event in upcoming_events %}
-                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 px-3 py-3 transition-colors duration-200 cursor-pointer event-item"
+                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 px-3 rounded-lg py-3 transition-colors duration-200 cursor-pointer event-item"
                     data-event-id="{{ event.id }}">
                     <div class="flex flex-row gap-9">
                         <div>
@@ -54,7 +57,7 @@
 
             <ul class="space-y-4">
                 {% for event in new_events %}
-                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 px-3 py-3 transition-colors duration-200 cursor-pointer event-item"
+                <li class="border-b border-gray-700 pb-4 hover:bg-gray-700 rounded-lg px-3 py-3 transition-colors duration-200 cursor-pointer event-item"
                     data-event-id="{{ event.id }}">
                     <div class="flex flex-row gap-9">
                         <div>

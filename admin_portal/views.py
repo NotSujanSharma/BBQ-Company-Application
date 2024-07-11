@@ -13,7 +13,7 @@ def admin_dashboard(request):
     # Upcoming confirmed events (status = 1, date >= today)
     upcoming_events = BBQBooking.objects.filter(
         status=1, 
-        date__gte=timezone.now().date()
+        # date__gte=timezone.now().date() //// need to uncomment this line
     ).order_by('date', 'time')[:5]
     
     # New pending events (status = 0)

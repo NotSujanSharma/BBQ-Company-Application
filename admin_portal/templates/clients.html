@@ -4,7 +4,9 @@
 
 {% block admin_content %}
 <div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
-    <h1 class="text-2xl font-bold mb-6 text-white">Client List</h1>
+    <h1 class="text-2xl font-bold mb-6 text-white">
+        {% block header_title %}Clients{%endblock %}
+    </h1>
 
     <div class="overflow-x-auto bg-gray-800 shadow-md rounded">
         <table class="min-w-full leading-normal">
