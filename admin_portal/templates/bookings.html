@@ -2,6 +2,10 @@
 
 {% block title %}Bookings{% endblock %}
 
+{% block extra_head %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+{% endblock %}
 {% block admin_content %}
 <div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
     <h1 class="text-2xl font-bold mb-6 text-white">
@@ -40,6 +44,10 @@
                         class="px-5 py-3 border-b-2 border-gray-700 bg-gray-800 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                         Client
                     </th>
+                    <th
+                        class="px-5 py-3 border-b-2 border-gray-700 bg-gray-800 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Action
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -74,6 +82,12 @@
                     </td>
                     <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ booking.user.first_name }} {{ booking.user.last_name }}
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                        <button onclick="printBookingPDF(event, {{ booking.id }})"
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                            Print PDF
+                        </button>
                     </td>
                 </tr>
                 {% empty %}
@@ -129,14 +143,19 @@
         const bookingItems = document.querySelectorAll('.booking-item');
         bookingItems.forEach(item => {
             item.addEventListener('click', () => {
-                currentBookingId = item.dataset.bookingId;
-                const eventType = item.querySelector('td:nth-child(4)').textContent.trim();
-                openPopup(eventType);
-                fetchBookingDetails(currentBookingId);
+                 if (!event.target.closest('button')) {
+                    currentBookingId = item.dataset.bookingId;
+                    const eventType = item.querySelector('td:nth-child(4)').textContent.trim();
+                    openPopup(eventType);
+                    fetchBookingDetails(currentBookingId);
+                }
             });
         });
     });
-
+    function printBookingPDF(event, bookingId) {
+            event.stopPropagation();
+            fetchBookingDetails(bookingId, true);
+        }
     function openPopup(eventType) {
         const popup = document.getElementById('bookingPopup');
         const popupContent = popup.querySelector('div');
@@ -164,7 +183,7 @@
         }, 300);
     }
 
-    function fetchBookingDetails(bookingId) {
+    function fetchBookingDetails(bookingId, generatePDF = false) {
         const url = `/admin-portal/booking-details/${bookingId}/`;
 
         fetch(url, {
@@ -177,7 +196,11 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    displayBookingDetails(data.booking);
+                    if (generatePDF) {
+                        generateBookingPDF(data.booking);
+                    } else {
+                        displayBookingDetails(data.booking);
+                    }
                 } else {
                     showMessage('Failed to fetch booking details', 'error');
                 }
@@ -187,7 +210,48 @@
                 showMessage('Error fetching booking details. Please try again.', 'error');
             });
     }
+    function generateBookingPDF(booking) {
+            if (typeof window.jspdf === 'undefined') {
+            console.error('jsPDF library not loaded');
+            showMessage('Error generating PDF. Please try again later.', 'error');
+            return;
+            }
 
+            const { jsPDF } = window.jspdf;
+                    
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text('Event Details', 105, 15, null, null, 'center');
+
+            doc.setFontSize(12);
+            doc.text(`Event Type: ${booking.event_type}`, 20, 30);
+            doc.text(`Date: ${formatDate(booking.date)} - ${formatTime(booking.time)}`, 20, 40);
+            doc.text(`Number of Guests: ${booking.guests}`, 20, 50);
+            doc.text(`Location: ${booking.location}`, 20, 60);
+            doc.text(`Status: ${getStatusString(booking.status)}`, 20, 70);
+
+            doc.text('Client Information', 120, 30);
+            doc.text(`Name: ${booking.user.first_name} ${booking.user.last_name}`, 120, 40);
+            doc.text(`Email: ${booking.user.email}`, 120, 50);
+            doc.text(`Contact: ${booking.user.contact_number}`, 120, 60);
+
+            doc.text('Menu', 20, 80);
+            let yPos = 90;
+            ['Main Dishes', 'Side Dishes', 'Desserts'].forEach(category => {
+                doc.text(`${category}:`, 20, yPos);
+                yPos += 10;
+                Object.entries(booking[category.toLowerCase().replace(' ', '_')]).forEach(([item, quantity]) => {
+                    doc.text(`- ${item}: ${quantity}`, 30, yPos);
+                    yPos += 10;
+                });
+                yPos += 5;
+            });
+
+            doc.text(`Drinks: ${booking.drinks}`, 20, yPos);
+
+            doc.save(`${booking.event_type}_${booking.user.first_name}.pdf`);
+        }
     function displayBookingDetails(booking) {
         const detailsContainer = document.getElementById('bookingDetails');
         detailsContainer.innerHTML = `
