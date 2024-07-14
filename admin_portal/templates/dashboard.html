@@ -1,6 +1,12 @@
 {% extends "admin_base.html" %}
+{% load static %}
 
 {% block title %}Dashboard{% endblock %}
+
+{% block extra_head%}
+
+<script src="{% static 'js/main.js' %}" defer></script>
+{% endblock %}
 
 {% block admin_content %}
 
@@ -229,43 +235,6 @@
             </div>
         `;
         }
-
-        function formatJSONField(jsonField) {
-            return Object.entries(jsonField)
-                .map(([key, value]) => `<p class="mb-1">${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}</p>`)
-                .join('');
-        }
-
-        function getStatusString(status) {
-            const statusMap = {
-                0: 'Pending',
-                1: 'Confirmed',
-                2: 'Cancelled',
-                3: 'Completed'
-            };
-            return statusMap[status] || 'Unknown';
-        }
-
-        function getStatusColor(status) {
-            const colorMap = {
-                0: 'text-yellow-400',
-                1: 'text-green-400',
-                2: 'text-red-400',
-                3: 'text-blue-400'
-            };
-            return colorMap[status] || 'text-gray-400';
-        }
-
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
-        }
-
-        function formatTime(timeString) {
-            const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-            return new Date(`1970-01-01T${timeString}`).toLocaleTimeString(undefined, options);
-        }
-
     function handleEventAction(action) {
             if (action === 'cancel-booking' || action === 'complete-event' || action === 'delete-booking' || action === 'confirm-booking') {
                 updateBookingStatus(currentEventId, action);
@@ -387,19 +356,5 @@
         }, 3000);
     }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 </script>
 {% endblock %}

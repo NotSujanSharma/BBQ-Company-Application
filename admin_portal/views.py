@@ -342,3 +342,52 @@ def analytics_api(request):
     }
 
     return JsonResponse(data)
+
+
+@staff_member_required
+def calendar_view(request):
+    return render(request, 'calendar.html')
+
+@staff_member_required
+def get_calendar_events(request):
+    bookings = BBQBooking.objects.filter(status=1)
+    events = []
+    for booking in bookings:
+        events.append({
+            'id': booking.id,
+            'title': f"{booking.get_event_type_display()}",
+            'start': f"{booking.date}T{booking.time}",
+            'extendedProps': {
+                'time': booking.time.strftime('%H:%M')
+            }
+        })
+    return JsonResponse(events, safe=False)
+
+@staff_member_required
+def get_booking_details(request, booking_id):
+    booking = get_object_or_404(BBQBooking, id=booking_id)
+    
+    data = {
+        'success': True,
+        'booking': {
+            'id': booking.id,
+            'event_type': booking.get_event_type_display(),
+            'date': booking.date.strftime('%Y-%m-%d'),
+            'time': booking.time.strftime('%H:%M'),
+            'location': booking.location,
+            'guests': booking.guests,
+            'status': booking.status,
+            'main_dishes': booking.main_dishes,
+            'side_dishes': booking.side_dishes,
+            'desserts': booking.desserts,
+            'drinks': booking.drinks,
+            'user': {
+                'first_name': booking.user.first_name,
+                'last_name': booking.user.last_name,
+                'email': booking.user.email,
+                'contact_number': booking.user.contact_number,
+            }
+        }
+    }
+    
+    return JsonResponse(data)

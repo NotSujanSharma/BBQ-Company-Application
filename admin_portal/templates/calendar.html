@@ -1,0 +1,156 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block title %}Calendar{% endblock %}
+{% block header_title %}BBQ Booking Calendar{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.5/main.min.css" integrity="sha512-1P/SRFqI1do4eNtBsGIAqIZIlnmOQkaY7ESI2vkl+q+hl9HSXmdPqotN0McmeZVyR4AWV+NvkP6pKOiVdY/V5A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.11.5/main.min.js" integrity="sha512-VyGX7HXwa9yMgIfDPYcj7+XFjtSEzqY7LTf2Tvn2FAf4O6MkD5UzNkrlkMHyLQMbdYfor8SNYKyyeBhTazNgPw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{% static 'js/main.js' %}" defer></script>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+    <h1 class="text-2xl font-bold mb-6 text-white">BBQ Booking Calendar</h1>
+
+    <div class="bg-gray-100 rounded-lg shadow-md p-6 mb-8">
+        <div id="calendar" class="text-gray-900"></div>
+    </div>
+
+    <!-- Booking Details Modal -->
+    <div id="bookingModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-300" id="modal-title">
+                        Booking Details
+                    </h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-400" id="bookingDetails"></p>
+                    </div>
+                </div>
+                <div class="bg-gray-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="closeModal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+        },
+        events: '/admin-portal/api/calendar-events/',  // You'll need to create this API endpoint
+        eventClick: function(info) {
+            showBookingDetails(info.event.id);
+        },
+        eventContent: function(arg) {
+            return {
+                html: '<div class="fc-content overflow-hidden cursor-pointer ">' +
+                      '<span class="fc-time">' + arg.event.extendedProps.time + ' </span>' +
+                      '<span class="fc-title font-bold">' + arg.event.title + '</span>' +
+                      '</div>'
+            };
+        },
+        eventDisplay: 'block',
+        eventBackgroundColor: '#3e68ff',
+        {% comment %} eventBorderColor: '#000', {% endcomment %}
+        eventTextColor: '#fff',
+        eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: true }
+
+
+
+
+    });
+    calendar.render();
+
+    function showBookingDetails(bookingId) {
+        fetch('/admin-portal/get-booking-details/' + bookingId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var booking = data.booking;
+                    var detailsHtml = `
+                    <div class="flex flex-row">
+                        <div class="bg-cool-gray-700 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-3 text-white">Event Details</h4>
+                            <p class="mb-2"><span class="font-medium">Event Type:</span> ${booking.event_type}</p>
+                            <p class="mb-2"><span class="font-medium">Date:</span> ${formatDate(booking.date)}</p>
+                            <p class="mb-2"><span class="font-medium">Time:</span> ${formatTime(booking.time)}</p>
+                            <p class="mb-2"><span class="font-medium">Location:</span> ${booking.location}</p>
+                            <p class="mb-2"><span class="font-medium">Guests:</span> ${booking.guests}</p>
+                            <p class="mb-2"><span class="font-medium">Status:</span> <span class="${getStatusColor(booking.status)}">${getStatusString(booking.status)}</span></p>
+                        </div>
+                        <div class="bg-cool-gray-700 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-3 text-white">Client Information</h4>
+                            <p class="mb-2"><span class="font-medium">Name:</span> ${booking.user.first_name} ${booking.user.last_name}</p>
+                            <p class="mb-2"><span class="font-medium">Email:</span> ${booking.user.email}</p>
+                            <p class="mb-2"><span class="font-medium">Contact:</span> ${booking.user.contact_number}</p>
+                        </div>
+                    </div>
+                    <div class="bg-cool-gray-700 p-4 rounded-lg col-span-full">
+                    <h4 class="text-lg font-semibold mb-3 text-white">Menu</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-medium mb-2">Main Dishes</h5>
+                            ${formatJSONField(booking.main_dishes)}
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">Side Dishes</h5>
+                            ${formatJSONField(booking.side_dishes)}
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">Desserts</h5>
+                            ${formatJSONField(booking.desserts)}
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">Drinks</h5>
+                            <p>${booking.drinks}</p>
+                        </div>
+                    </div>
+                 </div>
+                    `;
+                    document.getElementById('bookingDetails').innerHTML = detailsHtml;
+                    document.getElementById('bookingModal').classList.remove('hidden');
+                } else {
+                    alert('Failed to load booking details.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while fetching booking details.');
+            });
+    }
+
+    function getStatusText(status) {
+        switch(status) {
+            case 0: return 'Pending';
+            case 1: return 'Confirmed';
+            case 2: return 'Cancelled';
+            case 3: return 'Completed';
+            default: return 'Unknown';
+        }
+    }
+
+    function formatDishes(dishes) {
+        return Object.entries(dishes).map(([dish, count]) => `${dish} (${count})`).join(', ');
+    }
+
+    document.getElementById('closeModal').addEventListener('click', function() {
+        document.getElementById('bookingModal').classList.add('hidden');
+    });
+});
+</script>
+{% endblock %}

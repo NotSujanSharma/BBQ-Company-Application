@@ -13,6 +13,7 @@ urlpatterns = [
     path('complete-event/<int:booking_id>/', views.complete_event, name='admin_complete_event'),
     path('delete-booking/<int:booking_id>/', views.delete_booking, name='admin_delete_booking'),
     path('edit-booking/<int:booking_id>/', views.edit_booking, name='admin_edit_booking'),
+    path('get-booking-details/<int:booking_id>/', views.get_booking_details, name='admin_get_booking_details'),
 
     path('create_campaign/', views.create_campaign, name='admin_create_campaign'),
     path('import_subscribers/', views.import_subscribers, name='admin_import_subscribers'),
@@ -25,5 +26,8 @@ urlpatterns = [
     path('analytics/', views.analytics, name='admin_analytics'),
 
     path('api/analytics/', views.analytics_api, name='analytics_api'),
+
+    path('calendar/', views.calendar_view, name='admin_calendar'),
+    path('api/calendar-events/', views.get_calendar_events, name='calendar_events')
 
 ]
