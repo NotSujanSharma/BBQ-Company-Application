@@ -50,6 +50,53 @@
                     </svg>
                     Bookings
                 </a>
+                {% comment %} <a href="{%url 'admin_marketing'%}"
+                    class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                    
+                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 12H8m0 0H5.41l-.97-1.21c-.36-.45-.51-1.02-.41-1.57.11-.54.45-1.03.97-1.37l6.08-4.14c.75-.51 1.74-.51 2.49 0l6.08 4.14c.52.34.86.83.97 1.37.1.55-.05 1.12-.41 1.57l-.97 1.21H16zm-8 0h8m0 0h2.59l.97 1.21c.36.45.51 1.02.41 1.57-.11.54-.45 1.03-.97 1.37l-6.08 4.14c-.75.51-1.74.51-2.49 0l-6.08-4.14c-.52-.34-.86-.83-.97-1.37-.1-.55.05-1.12.41-1.57l.97-1.21H8zm0 0V12z" />
+                </svg>  
+                    Marketing
+                </a> {% endcomment %}
+                <div class="relative">
+                    <button id="marketing-dropdown" 
+                        class="w-full flex items-center justify-between px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                        <span class="flex items-center">
+                            <svg  class="h-5 w-5 mr-3"  fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            Marketing
+                        </span>
+                        <svg class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="marketing-submenu" class="hidden pl-8 py-2 space-y-2">
+                        <a href="{% url 'admin_marketing' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                            Marketing Dashboard
+                        </a>
+                        <a href="{% url 'admin_create_campaign' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                            Create Campaign
+                        </a>
+                        <a href="{% url 'admin_campaigns' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                            Campaigns
+                        </a>
+                        <a href="{% url 'admin_subscriber_management' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                            Subscriber Management
+                        </a>
+                        
+                    </div>
+                </div>
+                <a href="{% url 'admin_analytics' %}"
+                    class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                
+                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path  stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 1 0 10 10H12V2zM21.18 8.02c-1-2.3-2.85-4.17-5.16-5.18"/>
+                    </svg>
+                    Analytics
+                </a>
                 <a href="{% url 'logout' %}"
                     class="flex items-center px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
                     <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,6 +136,20 @@
         document.getElementById('mobile-menu-button').addEventListener('click', function () {
             var sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
+        });
+       
+        document.getElementById('marketing-dropdown').addEventListener('click', function() {
+            var submenu = document.getElementById('marketing-submenu');
+            var arrow = this.querySelector('svg:last-child');
+            
+            submenu.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+            
+            if (submenu.classList.contains('hidden')) {
+                submenu.style.maxHeight = '0px';
+            } else {
+                submenu.style.maxHeight = submenu.scrollHeight + 'px';
+            }
         });
     </script>
 </body>

@@ -1,0 +1,55 @@
+{% extends "admin_base.html" %}
+{% load custom_filters %}
+
+{% block title %}Campaign Details: {{ campaign.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+    <h1 class="text-2xl font-bold mb-6 text-white">Campaign Details: {{ campaign.name }}</h1>
+
+    <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h2 class="text-xl font-semibold mb-4 text-white">Campaign Information</h2>
+                <p><span class="font-semibold">Name:</span> {{ campaign.name }}</p>
+                <p><span class="font-semibold">Subject:</span> {{ campaign.subject }}</p>
+                <p><span class="font-semibold">Recipient Group:</span> {{ campaign.get_recipient_group_display }}</p>
+                <p><span class="font-semibold">Created:</span> {{ campaign.date_created|date:"F d, Y H:i" }}</p>
+                {% if campaign.date_sent %}
+                    <p><span class="font-semibold">Sent:</span> {{ campaign.date_sent|date:"F d, Y H:i" }}</p>
+                {% else %}
+                    <p><span class="font-semibold">Status:</span> <span class="text-yellow-400">Not Sent</span></p>
+                {% endif %}
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold mb-4 text-white">Performance Metrics</h2>
+                <p><span class="font-semibold">Open Rate:</span> <span class="text-green-400">{{ campaign.open_rate|floatformat:2 }}%</span></p>
+                <p><span class="font-semibold">Click Rate:</span> <span class="text-blue-400">{{ campaign.click_rate|floatformat:2 }}%</span></p>
+                <!-- Add more metrics as needed -->
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-white">Email Content</h2>
+        <div class="bg-gray-700 p-4 rounded-lg">
+            {{ campaign.content|linebreaks }}
+        </div>
+    </div>
+
+    {% if not campaign.date_sent %}
+    <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-white">Actions</h2>
+        <form method="post" action="{% url 'admin_send_campaign' campaign.id %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Send Campaign</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="flex justify-between">
+        <a href="{% url 'admin_campaign_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Campaigns</a>
+        <a href="{% url 'admin_edit_campaign' campaign.id %}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Edit Campaign</a>
+    </div>
+</div>
+{% endblock %}

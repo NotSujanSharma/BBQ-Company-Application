@@ -240,3 +240,4 @@ def get_booking_details(request, booking_id):
         return JsonResponse(data)
     except BBQBooking.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Booking not found'}, status=404)
+

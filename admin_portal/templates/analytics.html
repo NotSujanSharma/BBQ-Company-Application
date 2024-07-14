@@ -1,0 +1,239 @@
+{% extends "admin_base.html" %} {% load custom_filters %} {% block title%}Analytics{% endblock %}
+ {% block header_title %}Analytics{% endblock %}
+{%block extra_head%}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+{%endblock%} {% block admin_content %}
+
+<div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+  {% if messages %}
+  <div class="mb-6">
+    {% for message in messages %}
+    <div
+      class="bg-blue-900 border-l-4 border-blue-500 text-blue-200 p-4 mb-2"
+      role="alert"
+    >
+      <p class="font-bold">{{ message }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <h1 class="text-2xl font-bold mb-6 text-white">Analytics Dashboard</h1>
+
+  <div class="bg-gray-900 text-gray-300">
+    <div class="container mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4 text-white">
+            Bookings Overview
+          </h2>
+          <canvas id="bookingsChart"></canvas>
+        </div>
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4 text-white">
+            Event Types Distribution
+          </h2>
+          <canvas id="eventTypesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4 text-white">Total Bookings</h2>
+          <p class="text-4xl font-bold text-blue-400" id="totalBookings">-</p>
+        </div>
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4 text-white">
+            Average Guests per Booking
+          </h2>
+          <p class="text-4xl font-bold text-green-400" id="avgGuests">-</p>
+        </div>
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4 text-white">
+            Most Popular Event Type
+          </h2>
+          <p class="text-4xl font-bold text-purple-400" id="popularEventType">
+            -
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-white">Top 5 Locations</h2>
+        <canvas id="locationsChart"></canvas>
+      </div>
+
+      <div class="bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4 text-white">Recent Bookings</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr>
+                <th class="pb-3 text-gray-400">Date</th>
+                <th class="pb-3 text-gray-400">Event Type</th>
+                <th class="pb-3 text-gray-400">Guests</th>
+                <th class="pb-3 text-gray-400">Status</th>
+              </tr>
+            </thead>
+            <tbody id="recentBookingsTable">
+              <!-- Recent bookings will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Function to fetch analytics data from the backend
+async function fetchAnalyticsData() {
+    try {
+        const response = await axios.get('/admin-portal/api/analytics/');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching analytics data:', error);
+    }
+}
+
+// Function to create and update charts
+function updateCharts(data) {
+    // Bookings Overview Chart
+    new Chart(document.getElementById('bookingsChart'), {
+        type: 'line',
+        data: {
+            labels: data.bookings_over_time.map(item => item.date),
+            datasets: [{
+                label: 'Number of Bookings',
+                data: data.bookings_over_time.map(item => item.count),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Bookings Over Time'
+                }
+            }
+        }
+    });
+
+    // Event Types Distribution Chart
+    new Chart(document.getElementById('eventTypesChart'), {
+        type: 'doughnut',
+        data: {
+            labels: data.event_types_distribution.map(item => item.event_type),
+            datasets: [{
+                data: data.event_types_distribution.map(item => item.count),
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)',
+                    'rgb(255, 159, 64)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Event Types Distribution'
+                }
+            }
+        }
+    });
+
+    // Top 5 Locations Chart
+    new Chart(document.getElementById('locationsChart'), {
+        type: 'bar',
+        data: {
+            labels: data.top_locations.map(item => item.location),
+            datasets: [{
+                label: 'Number of Bookings',
+                data: data.top_locations.map(item => item.count),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgb(75, 192, 192)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Top 5 Locations'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Function to update statistics
+function updateStatistics(data) {
+    document.getElementById('totalBookings').textContent = data.total_bookings;
+    document.getElementById('avgGuests').textContent = data.average_guests.toFixed(1);
+    document.getElementById('popularEventType').textContent = data.most_popular_event_type;
+}
+
+// Function to update recent bookings table
+function updateRecentBookings(bookings) {
+    const tableBody = document.getElementById('recentBookingsTable');
+    tableBody.innerHTML = '';
+
+    bookings.forEach(booking => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="py-2">${new Date(booking.date).toLocaleDateString()}</td>
+            <td class="py-2">${booking.event_type}</td>
+            <td class="py-2">${booking.guests}</td>
+            <td class="py-2">
+                <span class="px-2 py-1 rounded-full text-xs font-semibold
+                    ${booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
+                      booking.status === 1 ? 'bg-green-200 text-green-800' :
+                      booking.status === 2 ? 'bg-red-200 text-red-800' :
+                      'bg-blue-200 text-blue-800'}">
+                    ${booking.status === 0 ? 'Pending' :
+                      booking.status === 1 ? 'Confirmed' :
+                      booking.status === 2 ? 'Cancelled' : 'Completed'}
+                </span>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+// Main function to initialize the dashboard
+async function initializeDashboard() {
+    const data = await fetchAnalyticsData();
+    if (data) {
+        updateCharts(data);
+        updateStatistics(data);
+        updateRecentBookings(data.recent_bookings);
+    }
+}
+
+// Call the initialization function when the page loads
+window.addEventListener('load', initializeDashboard);
+    </script>
+  </div>
+</div>
+{% endblock %}

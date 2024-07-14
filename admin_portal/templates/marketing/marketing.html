@@ -1,0 +1,78 @@
+
+
+{% extends "admin_base.html" %}
+{% load custom_filters %}
+{% block title %}Marketing{% endblock %}
+{% block header_title %}Marketing Dashboard{% endblock %}
+{% block admin_content %}
+
+<div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+     {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-200 p-4 mb-2" role="alert">
+            <p class="font-bold">{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <h1 class="text-2xl font-bold mb-6 text-white">Marketing Dashboard</h1>
+
+    
+    <!-- Recent Campaigns List -->
+    <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-white">Recent Campaigns</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr>
+                        <th class="pb-3 text-gray-400">Campaign Name</th>
+                        <th class="pb-3 text-gray-400">Date Sent</th>
+                        <th class="pb-3 text-gray-400">Open Rate</th>
+                        <th class="pb-3 text-gray-400">Click Rate</th>
+                        <th class="pb-3 text-gray-400">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in recent_campaigns %}
+                    <tr>
+                        <td class="py-2 text-gray-300">{{ campaign.name }}</td>
+                        <td class="py-2 text-gray-300">{{ campaign.date_sent|date:"M d, Y" }}</td>
+                        <td class="py-2 text-gray-300">{{ campaign.open_rate }}%</td>
+                        <td class="py-2 text-gray-300">{{ campaign.click_rate }}%</td>
+                        <td class="py-2 text-gray-300">
+                            <a href="{% url 'campaign_details' campaign.id %}" class="text-blue-400 hover:text-blue-300">View Details</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-2 text-gray-400">No campaigns found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+  
+    <!-- Analytics Section -->
+    <div class="bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4 text-white">Campaign Analytics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2 text-gray-300">Average Open Rate</h3>
+                <p class="text-2xl font-bold text-green-400">{{ avg_open_rate|floatformat:2 }}%</p>
+            </div>
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2 text-gray-300">Average Click Rate</h3>
+                <p class="text-2xl font-bold text-blue-400">{{ avg_click_rate|floatformat:2 }}%</p>
+            </div>
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2 text-gray-300">Total Subscribers</h3>
+                <p class="text-2xl font-bold text-yellow-400">{{ total_subscribers }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{%endblock%}

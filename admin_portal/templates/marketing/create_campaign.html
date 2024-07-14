@@ -1,0 +1,40 @@
+
+{% extends "admin_base.html" %}
+{% load custom_filters %}
+{% block title %}Create Campaign{% endblock %}
+{% block header_title %}Create Campaign{% endblock %}
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+     {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-200 p-4 mb-2" role="alert">
+            <p class="font-bold">{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <h1 class="text-2xl font-bold mb-6 text-white">Create Campaign</h1>
+
+    <!-- Email Campaign Creation Form -->
+    <div class="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-white">Create New Campaign</h2>
+        <form method="post" action="{% url 'admin_create_campaign' %}">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-4">
+                    <label for="{{ field.id_for_label }}" class="text-gray-400 mb-2">{{ field.label }}</label>
+                    {{ field|add_class:"w-full bg-gray-700 text-white rounded px-3 py-2"}}
+                </div>
+                {% if field.help_text %}
+                    <small class="text-gray-500">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="text-red-500">{{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Campaign</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

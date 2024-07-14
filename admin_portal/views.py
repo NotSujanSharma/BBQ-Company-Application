@@ -6,6 +6,14 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.urls import reverse
 from accounts.forms import BBQBookingForm
+from .forms import CampaignForm
+from .models import Campaign
+from datetime import timedelta
+
+from django.db.models import Avg
+
+# import messages
+from django.contrib import messages
 
 @staff_member_required
 def admin_dashboard(request):
@@ -190,7 +198,7 @@ def edit_booking(request, booking_id):
     if request.method == 'POST':
         if booking.status == 3:
             messages.error(request, "You can't edit a booking that is already completed.")
-            return redirect(reverse('view_booked_events'))
+            return redirect(reverse('admin_booking_list'))
         form = BBQBookingForm(request.POST, instance=booking)
         if form.is_valid():
             
@@ -231,3 +239,106 @@ def edit_booking(request, booking_id):
         form = BBQBookingForm(instance=booking)
     
     return render(request, 'admin_edit_booking.html', {'form': form, 'booking': booking})
+
+@staff_member_required
+def marketing(request):
+    recent_campaigns = Campaign.objects.order_by('-date_sent')[:5]
+    avg_open_rate = Campaign.objects.aggregate(Avg('open_rate'))['open_rate__avg']
+    avg_click_rate = Campaign.objects.aggregate(Avg('click_rate'))['click_rate__avg']
+    context = {
+        'recent_campaigns': recent_campaigns,
+        'avg_open_rate': avg_open_rate,
+        'avg_click_rate': avg_click_rate,
+    }
+    return render(request, 'marketing/marketing.html',context)
+
+
+
+
+@staff_member_required
+def import_subscribers(request):
+    return render(request, 'marketing/import_subscribers.html')
+
+@staff_member_required
+def export_subscribers(request):
+    return render(request, 'marketing/export_subscribers.html')
+
+@staff_member_required
+def create_campaign(request):
+    if request.method == 'POST':
+        form = CampaignForm(request.POST)
+        if form.is_valid():
+            campaign = form.save(commit=False)
+            campaign.user = request.user
+            campaign.save()
+            messages.success(request, 'Campaign created successfully')
+            return redirect('admin_marketing')
+        else:
+            messages.error(request, 'An error occurred. Please try again.')
+
+    return render(request, 'marketing/create_campaign.html', {'form': CampaignForm()})
+
+@staff_member_required
+def campaign_details(request, campaign_id):
+    campaign = Campaign.objects.get(id=campaign_id)
+    return render(request, 'marketing/campaign_details.html', {'campaign': campaign})
+
+
+@staff_member_required
+def subscriber_management(request):
+    return render(request, 'marketing/subscriber_management.html')
+
+@staff_member_required
+def campaigns(request):
+    campaigns = Campaign.objects.all()
+    return render(request, 'marketing/campaigns.html', {'campaigns': campaigns})
+
+
+@staff_member_required
+def analytics(request):
+    return render(request, 'analytics.html')
+
+@staff_member_required
+def analytics_api(request):
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
+
+    # Bookings over time
+    bookings_over_time = BBQBooking.objects.filter(date__range=[start_date, end_date]) \
+        .values('date') \
+        .annotate(count=Count('id')) \
+        .order_by('date')
+
+    # Event types distribution
+    event_types_distribution = BBQBooking.objects.values('event_type') \
+        .annotate(count=Count('id')) \
+        .order_by('-count')
+
+    # Top 5 locations
+    top_locations = BBQBooking.objects.values('location') \
+        .annotate(count=Count('id')) \
+        .order_by('-count')[:5]
+
+    # Total bookings
+    total_bookings = BBQBooking.objects.count()
+
+    # Average guests per booking
+    average_guests = BBQBooking.objects.aggregate(Avg('guests'))['guests__avg']
+
+    # Most popular event type
+    most_popular_event_type = event_types_distribution.first()['event_type']
+
+    # Recent bookings
+    recent_bookings = BBQBooking.objects.order_by('-date')[:10].values('date', 'event_type', 'guests', 'status')
+
+    data = {
+        'bookings_over_time': list(bookings_over_time),
+        'event_types_distribution': list(event_types_distribution),
+        'top_locations': list(top_locations),
+        'total_bookings': total_bookings,
+        'average_guests': average_guests,
+        'most_popular_event_type': most_popular_event_type,
+        'recent_bookings': list(recent_bookings),
+    }
+
+    return JsonResponse(data)
