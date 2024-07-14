@@ -69,10 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
         {% comment %} eventBorderColor: '#000', {% endcomment %}
         eventTextColor: '#fff',
         eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: true }
-
-
-
-
     });
     calendar.render();
 
@@ -132,20 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error:', error);
                 alert('An error occurred while fetching booking details.');
             });
-    }
-
-    function getStatusText(status) {
-        switch(status) {
-            case 0: return 'Pending';
-            case 1: return 'Confirmed';
-            case 2: return 'Cancelled';
-            case 3: return 'Completed';
-            default: return 'Unknown';
-        }
-    }
-
-    function formatDishes(dishes) {
-        return Object.entries(dishes).map(([dish, count]) => `${dish} (${count})`).join(', ');
     }
 
     document.getElementById('closeModal').addEventListener('click', function() {

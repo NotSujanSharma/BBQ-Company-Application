@@ -5,8 +5,16 @@ urlpatterns = [
     path('', views.admin_dashboard, name='admin_home'),
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('clients/', views.client_list, name='admin_client_list'),
+    path('add-client/', views.add_client, name='admin_add_client'),
+
+    path('client-details/<int:client_id>/', views.client_details, name='admin_client_details'),
+    path('edit-client/<int:client_id>/', views.edit_client, name='admin_edit_client'),
+    path('delete-client/<int:client_id>/', views.delete_client, name='admin_delete_client'),
+
     path('bookings/', views.booking_list, name='admin_booking_list'),
     path('marketing/', views.marketing, name='admin_marketing' ),
+
+    path('add-booking/', views.add_booking, name='admin_add_booking'),
 
     path('confirm-booking/<int:booking_id>/', views.confirm_booking, name='admin_confirm_booking'),
     path('cancel-booking/<int:booking_id>/', views.cancel_booking, name='admin_cancel_booking'),
@@ -28,6 +36,14 @@ urlpatterns = [
     path('api/analytics/', views.analytics_api, name='analytics_api'),
 
     path('calendar/', views.calendar_view, name='admin_calendar'),
-    path('api/calendar-events/', views.get_calendar_events, name='calendar_events')
+    path('api/calendar-events/', views.get_calendar_events, name='calendar_events'),
+
+
+    path('staff-overview/', views.staff_overview, name='admin_staff_overview'),
+    path('staff-list/', views.staff_list, name='admin_staff_list'),
+    path('add-staff/', views.add_staff, name='admin_add_staff'),
+    path('edit-staff/<int:staff_id>/', views.edit_staff, name='admin_edit_staff'),
+    path('delete-staff/<int:staff_id>/', views.delete_staff, name='admin_delete_staff'),
+    
 
 ]

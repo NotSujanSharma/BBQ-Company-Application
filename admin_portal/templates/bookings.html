@@ -10,9 +10,15 @@
 {% endblock %}
 {% block admin_content %}
 <div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
-    <h1 class="text-2xl font-bold mb-6 text-white">
-        {% block header_title %}Bookings{%endblock %}
-    </h1>
+    <div class="flex flex-row justify-between">
+        <h1 class="text-2xl font-bold mb-6 text-white">
+            {% block header_title %}Bookings{%endblock %}
+        </h1>
+        <button class="bg-green-600 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded"
+            onclick="window.location.href='/admin-portal/add-booking/';">
+            Add Booking
+        </button>
+    </div>
 
     <div class="overflow-x-auto bg-gray-800 shadow-md rounded">
         <table class="min-w-full leading-normal">
@@ -105,7 +111,7 @@
 </div>
 
 <!-- Popup Window -->
-<div id="bookingPopup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+<div id="popupWindow" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
     <div
         class="bg-gray-800 p-6 rounded-lg shadow-xl w-3/4 max-w-2xl transform scale-95 opacity-0 transition-all duration-300 overflow-y-auto max-h-[90vh]">
         <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
@@ -147,8 +153,6 @@
             item.addEventListener('click', () => {
                  if (!event.target.closest('button')) {
                     currentBookingId = item.dataset.bookingId;
-                    const eventType = item.querySelector('td:nth-child(4)').textContent.trim();
-                    openPopup(eventType);
                     fetchBookingDetails(currentBookingId);
                 }
             });
@@ -158,107 +162,12 @@
             event.stopPropagation();
             fetchBookingDetails(bookingId, true);
         }
-    function openPopup(eventType) {
-        const popup = document.getElementById('bookingPopup');
-        const popupContent = popup.querySelector('div');
-        document.getElementById('popupTitle').textContent = eventType;
 
-        popup.classList.remove('hidden');
-        popup.classList.add('flex');
-
-        setTimeout(() => {
-            popupContent.classList.remove('scale-95', 'opacity-0');
-            popupContent.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    }
-
-    function closePopup() {
-        const popup = document.getElementById('bookingPopup');
-        const popupContent = popup.querySelector('div');
-
-        popupContent.classList.remove('scale-100', 'opacity-100');
-        popupContent.classList.add('scale-95', 'opacity-0');
-
-        setTimeout(() => {
-            popup.classList.remove('flex');
-            popup.classList.add('hidden');
-        }, 300);
-    }
-
-    function fetchBookingDetails(bookingId, generatePDF = false) {
-        const url = `/admin-portal/booking-details/${bookingId}/`;
-
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (generatePDF) {
-                        generateBookingPDF(data.booking);
-                    } else {
-                        displayBookingDetails(data.booking);
-                    }
-                } else {
-                    showMessage('Failed to fetch booking details', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching booking details:', error);
-                showMessage('Error fetching booking details. Please try again.', 'error');
-            });
-    }
-    function generateBookingPDF(booking) {
-            if (typeof window.jspdf === 'undefined') {
-            console.error('jsPDF library not loaded');
-            showMessage('Error generating PDF. Please try again later.', 'error');
-            return;
-            }
-
-            const { jsPDF } = window.jspdf;
-                    
-            const doc = new jsPDF();
-
-            doc.setFontSize(18);
-            doc.text('Event Details', 105, 15, null, null, 'center');
-
-            doc.setFontSize(12);
-            doc.text(`Event Type: ${booking.event_type}`, 20, 30);
-            doc.text(`Date: ${formatDate(booking.date)} - ${formatTime(booking.time)}`, 20, 40);
-            doc.text(`Number of Guests: ${booking.guests}`, 20, 50);
-            doc.text(`Location: ${booking.location}`, 20, 60);
-            doc.text(`Status: ${getStatusString(booking.status)}`, 20, 70);
-
-            doc.text('Client Information', 120, 30);
-            doc.text(`Name: ${booking.user.first_name} ${booking.user.last_name}`, 120, 40);
-            doc.text(`Email: ${booking.user.email}`, 120, 50);
-            doc.text(`Contact: ${booking.user.contact_number}`, 120, 60);
-
-            doc.text('Menu', 20, 80);
-            let yPos = 90;
-            ['Main Dishes', 'Side Dishes', 'Desserts'].forEach(category => {
-                doc.text(`${category}:`, 20, yPos);
-                yPos += 10;
-                Object.entries(booking[category.toLowerCase().replace(' ', '_')]).forEach(([item, quantity]) => {
-                    doc.text(`- ${item}: ${quantity}`, 30, yPos);
-                    yPos += 10;
-                });
-                yPos += 5;
-            });
-
-            doc.text(`Drinks: ${booking.drinks}`, 20, yPos);
-
-            doc.save(`${booking.event_type}_${booking.user.first_name}.pdf`);
-        }
     function displayBookingDetails(booking) {
         const detailsContainer = document.getElementById('bookingDetails');
         detailsContainer.innerHTML = `
             <div class="flex flex-row">
-                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                <div class="bg-gray-700 p-4 rounded-lg">
                     <h4 class="text-lg font-semibold mb-3 text-white">Event Details</h4>
                     <p class="mb-2"><span class="font-medium">Event Type:</span> ${booking.event_type}</p>
                     <p class="mb-2"><span class="font-medium">Date:</span> ${formatDate(booking.date)}</p>
@@ -267,14 +176,14 @@
                     <p class="mb-2"><span class="font-medium">Guests:</span> ${booking.guests}</p>
                     <p class="mb-2"><span class="font-medium">Status:</span> <span class="${getStatusColor(booking.status)}">${getStatusString(booking.status)}</span></p>
                 </div>
-                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                <div class="p-4 rounded-lg">
                     <h4 class="text-lg font-semibold mb-3 text-white">Client Information</h4>
                     <p class="mb-2"><span class="font-medium">Name:</span> ${booking.user.first_name} ${booking.user.last_name}</p>
                     <p class="mb-2"><span class="font-medium">Email:</span> ${booking.user.email}</p>
                     <p class="mb-2"><span class="font-medium">Contact:</span> ${booking.user.contact_number}</p>
                 </div>
             </div>
-            <div class="bg-cool-gray-700 p-4 rounded-lg col-span-full">
+            <div class="p-4 rounded-lg col-span-full">
                 <h4 class="text-lg font-semibold mb-3 text-white">Menu</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -296,6 +205,7 @@
                 </div>
             </div>
         `;
+        openPopup(`${booking.event_type}`);
     }
 
     function handleEventAction(action) {
@@ -357,30 +267,6 @@
                 });
         }
 
-    function showMessage(message, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = message;
-        messageDiv.classList.add('fixed', 'top-4', 'right-4', 'p-4', 'rounded', 'text-white', 'opacity-0', 'transition-opacity', 'duration-300');
-
-        if (type === 'success') {
-            messageDiv.classList.add('bg-green-600');
-        } else {
-            messageDiv.classList.add('bg-red-600');
-        }
-
-        document.body.appendChild(messageDiv);
-
-        setTimeout(() => {
-            messageDiv.classList.add('opacity-100');
-        }, 10);
-
-        setTimeout(() => {
-            messageDiv.classList.remove('opacity-100');
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 300);
-        }, 3000);
-    }
 
     
 </script>

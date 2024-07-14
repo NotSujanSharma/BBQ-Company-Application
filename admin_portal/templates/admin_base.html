@@ -51,6 +51,25 @@
                     Bookings
                 </a>
                 <div class="relative">
+                    <button id="staff-dropdown" class="w-full flex items-center justify-between px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
+                        <span class="flex items-center">
+                            <svg class="h-5 w-5 mr-3" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            Staff Mgmt
+                        </span>
+                        <svg class="h-4 w-4 transition-transform duration-200" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="staff-mgmt-submenu" class="hidden pl-8 py-2 space-y-2">
+                        <a href="{% url 'admin_staff_overview' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">Overview</a>
+                        <a href="{% url 'admin_add_staff' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">New Staff</a>
+                        <a href="{% url 'admin_staff_list' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">Staff List</a>
+                        <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 text-sm text-gray-100 hover:bg-indigo-600 transition-colors duration-200">Schedule Mgmt</a>
+                    </div>
+                </div>
+                <div class="relative">
                     <button id="marketing-dropdown" 
                         class="w-full flex items-center justify-between px-6 py-3 text-gray-100 hover:bg-indigo-600 transition-colors duration-200">
                         <span class="flex items-center">
@@ -129,7 +148,6 @@
             </main>
         </div>
     </div>
-
     <script>
         document.getElementById('mobile-menu-button').addEventListener('click', function () {
             var sidebar = document.getElementById('sidebar');
@@ -149,7 +167,21 @@
                 submenu.style.maxHeight = submenu.scrollHeight + 'px';
             }
         });
+        document.addEventListener('DOMContentLoaded', function() {
+            const staffMgmtButton = document.getElementById('staff-dropdown');
+            const staffMgmtSubmenu = document.getElementById('staff-mgmt-submenu');
+            const dropdownArrow = staffMgmtButton.querySelector('svg:last-child');
+
+            staffMgmtButton.addEventListener('click', function() {
+                staffMgmtSubmenu.classList.toggle('hidden');
+                dropdownArrow.classList.toggle('rotate-180');
+            });
+        });
     </script>
+    {% block extra_js %}
+    
+    {% endblock %}
+    
 </body>
 
 </html>

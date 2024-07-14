@@ -7,8 +7,10 @@ from django.http import JsonResponse
 from django.urls import reverse
 from accounts.forms import BBQBookingForm
 from .forms import CampaignForm
-from .models import Campaign
+from .models import Campaign, Staff
 from datetime import timedelta
+from django.http import JsonResponse
+from accounts.forms import UserProfileForm
 
 from django.db.models import Avg
 
@@ -391,3 +393,183 @@ def get_booking_details(request, booking_id):
     }
     
     return JsonResponse(data)
+
+
+@staff_member_required
+def client_details(request, client_id):
+    client = get_object_or_404(CustomUser, id=client_id)
+    bookings = BBQBooking.objects.filter(user=client)
+    total_bookings = bookings.count()
+    last_booking_date = bookings.order_by('-date').first().date if total_bookings > 0 else None
+    data = {
+        'success': True,
+        'client': {
+            'id': client.id,
+            'first_name': client.first_name,
+            'last_name': client.last_name,
+            'email': client.email,
+            'contact_number': client.contact_number,
+            'address': client.address,
+            'booking_count': total_bookings,
+            'last_booking_date': last_booking_date,
+        },
+        
+    }
+    return JsonResponse(data)
+
+@staff_member_required
+def delete_client(request, client_id):
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        }, status=405)
+
+    try:
+        client = get_object_or_404(CustomUser, id=client_id)
+        client.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Client successfully deleted'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
+    
+
+
+@staff_member_required
+def edit_client(request, client_id):
+    client = get_object_or_404(CustomUser, id=client_id)
+    form = UserProfileForm(instance=client)
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=client)
+        if form.is_valid():
+            client = form.save(commit=False)
+            client.first_name = request.POST.get('first_name')
+            client.last_name = request.POST.get('last_name')
+            client.email = request.POST.get('email')
+            client.contact_number = request.POST.get('contact_number')
+            client.address = request.POST.get('address')
+            client.save()
+            messages.success(request, 'Client details updated successfully')
+        else:
+            messages.error(request, 'An error occurred. Please try again.')
+        return redirect(reverse('admin_client_list'))
+    
+    return render(request, 'edit_client.html', {'form': form})
+
+@staff_member_required
+def add_client(request):
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+        if form.is_valid():
+            client = form.save(commit=False)
+            client.is_staff = False
+            client.is_superuser = False
+            client.save()
+            messages.success(request, 'Client added successfully')
+            return redirect(reverse('admin_client_list'))
+        else:
+            messages.error(request, 'An error occurred. Please try again.')
+    return render(request, 'add_client.html', {'form': UserProfileForm()})
+
+
+@staff_member_required
+def add_booking(request):
+    if request.method == 'POST':
+        form = BBQBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.user = request.user
+            booking.drinks = form.cleaned_data['guests']
+            booking.event_type = form.cleaned_data['event_type']
+            # Process main dishes
+            main_dishes = {}
+            for dish in form.MAIN_DISHES:
+                dish_key = f'main_dish_{dish[0]}'
+                count_key = f'main_dish_{dish[0]}_count'
+                if dish_key in request.POST and request.POST.get(count_key):
+                    main_dishes[dish[0]] = int(request.POST.get(count_key))
+            booking.main_dishes = main_dishes
+
+            # Process side dishes
+            side_dishes = {}
+            for dish in form.SIDE_DISHES:
+                dish_key = f'side_dish_{dish[0]}'
+                count_key = f'side_dish_{dish[0]}_count'
+                if dish_key in request.POST and request.POST.get(count_key):
+                    side_dishes[dish[0]] = int(request.POST.get(count_key))
+            booking.side_dishes = side_dishes
+
+            # Process desserts
+            desserts = {}
+            for dessert in form.DESSERTS:
+                dessert_key = f'dessert_{dessert[0]}'
+                count_key = f'dessert_{dessert[0]}_count'
+                if dessert_key in request.POST and request.POST.get(count_key):
+                    desserts[dessert[0]] = int(request.POST.get(count_key))
+            booking.desserts = desserts
+
+            booking.save()
+            return redirect(reverse('admin_booking_list'))
+    else:
+        form = BBQBookingForm()
+    
+    return render(request, 'add_booking.html', {'form': form})
+
+@staff_member_required
+def staff_overview(request):
+    # staff_list = CustomUser.objects.filter(is_staff=True)
+    staff_list = Staff.objects.all()
+    chef_count = Staff.objects.filter(role='chef').count()
+    server_count = Staff.objects.filter(role='server').count()
+    manager_count = Staff.objects.filter(role='manager').count()
+
+    context = {
+        'staff_list': staff_list,
+        'chef_count': chef_count,
+        'server_count': server_count,
+        'manager_count': manager_count,
+    }
+    return render(request, 'staff/staff_overview.html', context)
+
+@staff_member_required
+def add_staff(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        role = request.POST.get('role')
+        Staff.objects.create(name=name, email=email, role=role)
+        messages.success(request, 'Staff member added successfully.')
+        return redirect('admin_staff_list')
+    return render(request, 'staff/add_staff.html')
+
+@staff_member_required
+def edit_staff(request, staff_id):
+    staff = Staff.objects.get(id=staff_id)
+    if request.method == 'POST':
+        staff.name = request.POST.get('name')
+        staff.email = request.POST.get('email')
+        staff.role = request.POST.get('role')
+        staff.save()
+        messages.success(request, 'Staff member updated successfully.')
+        return redirect('admin_staff_list')
+    return render(request, 'staff/edit_staff.html', {'staff': staff})
+
+@staff_member_required
+def delete_staff(request, staff_id):
+    staff = Staff.objects.get(id=staff_id)
+    staff.delete()
+    messages.success(request, 'Staff member deleted successfully.')
+    return redirect('admin_staff_overview')
+
+@staff_member_required
+def staff_list(request):
+    staff_list = Staff.objects.all()
+    return render(request, 'staff/staff_list.html', {'staff_list': staff_list})
+    
+

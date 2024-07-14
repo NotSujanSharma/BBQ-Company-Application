@@ -1,12 +1,34 @@
 {% extends "admin_base.html" %}
+{%load static%}
 
 {% block title %}Clients{% endblock %}
-
+{%block extra_head%}
+<script src="{% static 'js/main.js' %}" defer></script>
+<script src="{% static 'js/clients.js' %}" defer></script>
+{%endblock%}
 {% block admin_content %}
 <div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+    {% if messages %}
+  <div class="mb-6">
+    {% for message in messages %}
+    <div
+      class="bg-blue-900 border-l-4 border-blue-500 text-blue-200 p-4 mb-2"
+      role="alert"
+    >
+      <p class="font-bold">{{ message }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="flex flex-row justify-between">
     <h1 class="text-2xl font-bold mb-6 text-white">
         {% block header_title %}Clients{%endblock %}
     </h1>
+    <button class="bg-green-600 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="window.location.href='/admin-portal/add-client/';">
+                Add Client
+    </button>
+  </div>
 
     <div class="overflow-x-auto bg-gray-800 shadow-md rounded">
         <table class="min-w-full leading-normal">
@@ -36,26 +58,26 @@
             </thead>
             <tbody>
                 {% for client in clients %}
-                <tr class="hover:bg-gray-700 transition-colors duration-200">
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                <tr class="hover:bg-gray-700 bg-gray-800 transition-colors duration-200 cursor-pointer client" data-client-id="{{ client.id }}">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ forloop.counter }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ client.email }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ client.first_name }} {{ client.last_name }}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{client.booking_count}}
                     </td>
-                    <td class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm">
+                    <td class="px-5 py-5 border-b border-gray-700 text-sm">
                         {{ client.contact_number }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="px-5 py-5 border-b border-gray-700 bg-gray-800 text-sm text-center">
+                    <td colspan="5" class="px-5 py-5 border-b border-gray-700 text-sm text-center">
                         No clients found.
                     </td>
                 </tr>
@@ -64,4 +86,41 @@
         </table>
     </div>
 </div>
+<div id="popupWindow" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-3/4 max-w-2xl transform scale-95 opacity-0 transition-all duration-300 overflow-y-auto max-h-[90vh]">
+        <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
+        <div id="clientDetails" class="mb-6 text-gray-300"></div>
+        <div class="flex flex-wrap justify-between">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('edit')">
+                Edit
+            </button>
+            <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 m-2 rounded"
+                onclick="handleEventAction('delete')">
+                Delete
+            </button>
+        </div>
+        <button onclick="closePopup()" class="mt-4 text-gray-400 hover:text-white">
+            Close
+        </button>
+    </div>
+</div>
+{% endblock%}
+{%block extra_js %}
+<script>
+    let currentClientId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bookingItems = document.querySelectorAll('.client');
+        bookingItems.forEach(item => {
+            item.addEventListener('click', () => {
+                    currentClientId = item.dataset.clientId;
+                    const clientName = item.querySelector('td:nth-child(3)').textContent.trim();
+                    openPopup(clientName);
+                    fetchClientDetails(currentClientId);
+                
+            });
+        });
+    });
+</script>
 {% endblock %}

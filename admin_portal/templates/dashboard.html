@@ -93,7 +93,7 @@
         </div>
     </div>
 </div>
-<div id="eventPopup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+<div id="popupWindow" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
     <div
         class="bg-gray-800 p-6 rounded-lg shadow-xl w-3/4 max-w-2xl transform scale-95 opacity-0 transition-all duration-300 overflow-y-auto max-h-[90vh]">
         <h3 id="popupTitle" class="text-xl font-semibold mb-4 text-white"></h3>
@@ -136,67 +136,16 @@
             eventItems.forEach(item => {
                 item.addEventListener('click', () => {
                     currentEventId = item.dataset.eventId;
-                    const eventTitle = item.querySelector('p').textContent;
-                    openPopup(eventTitle);
                     fetchBookingDetails(currentEventId);
                 });
             });
         });
 
-     function openPopup(eventTitle) {
-            const popup = document.getElementById('eventPopup');
-            const popupContent = popup.querySelector('div');
-            document.getElementById('popupTitle').textContent = eventTitle;
-
-            popup.classList.remove('hidden');
-            popup.classList.add('flex');
-
-            setTimeout(() => {
-                popupContent.classList.remove('scale-95', 'opacity-0');
-                popupContent.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-    function closePopup() {
-            const popup = document.getElementById('eventPopup');
-            const popupContent = popup.querySelector('div');
-
-            popupContent.classList.remove('scale-100', 'opacity-100');
-            popupContent.classList.add('scale-95', 'opacity-0');
-
-            setTimeout(() => {
-                popup.classList.remove('flex');
-                popup.classList.add('hidden');
-            }, 300);
-        }
-    function fetchBookingDetails(bookingId) {
-            const url = `/admin-portal/booking-details/${bookingId}/`;
-
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        displayBookingDetails(data.booking);
-                    } else {
-                        showMessage('Failed to fetch booking details', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching booking details:', error);
-                    showMessage('Error fetching booking details. Please try again.', 'error');
-                });
-        }
      function displayBookingDetails(booking) {
             const detailsContainer = document.getElementById('bookingDetails');
             detailsContainer.innerHTML = `
             <div class="flex flex-row">
-                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                <div class="bg-gray-700 p-4 rounded-lg">
                     <h4 class="text-lg font-semibold mb-3 text-white">Event Details</h4>
                     <p class="mb-2"><span class="font-medium">Event Type:</span> ${booking.event_type}</p>
                     <p class="mb-2"><span class="font-medium">Date:</span> ${formatDate(booking.date)}</p>
@@ -205,14 +154,14 @@
                     <p class="mb-2"><span class="font-medium">Guests:</span> ${booking.guests}</p>
                     <p class="mb-2"><span class="font-medium">Status:</span> <span class="${getStatusColor(booking.status)}">${getStatusString(booking.status)}</span></p>
                 </div>
-                <div class="bg-cool-gray-700 p-4 rounded-lg">
+                <div class="p-4 rounded-lg">
                     <h4 class="text-lg font-semibold mb-3 text-white">Client Information</h4>
                     <p class="mb-2"><span class="font-medium">Name:</span> ${booking.user.first_name} ${booking.user.last_name}</p>
                     <p class="mb-2"><span class="font-medium">Email:</span> ${booking.user.email}</p>
                     <p class="mb-2"><span class="font-medium">Contact:</span> ${booking.user.contact_number}</p>
                 </div>
             </div>
-            <div class="bg-cool-gray-700 p-4 rounded-lg col-span-full">
+            <div class="p-4 rounded-lg col-span-full">
                 <h4 class="text-lg font-semibold mb-3 text-white">Menu</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -234,6 +183,7 @@
                 </div>
             </div>
         `;
+        openPopup(`${booking.event_type}`);
         }
     function handleEventAction(action) {
             if (action === 'cancel-booking' || action === 'complete-event' || action === 'delete-booking' || action === 'confirm-booking') {
@@ -331,30 +281,6 @@
         }
     }
 
-    function showMessage(message, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = message;
-        messageDiv.classList.add('fixed', 'top-4', 'right-4', 'p-4', 'rounded', 'text-white', 'opacity-0', 'transition-opacity', 'duration-300');
-
-        if (type === 'success') {
-            messageDiv.classList.add('bg-green-600');
-        } else {
-            messageDiv.classList.add('bg-red-600');
-        }
-
-        document.body.appendChild(messageDiv);
-
-        setTimeout(() => {
-            messageDiv.classList.add('opacity-100');
-        }, 10);
-
-        setTimeout(() => {
-            messageDiv.classList.remove('opacity-100');
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 300);
-        }, 3000);
-    }
 
 </script>
 {% endblock %}

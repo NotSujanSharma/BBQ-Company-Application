@@ -1,0 +1,196 @@
+{%extends 'admin_base.html' %}
+{% load custom_filters %}
+
+{% load static %}
+{% block title %}Add Booking{% endblock %}
+
+
+{% block extra_head %}
+    
+{% endblock %}
+
+{% block header_title %}Add Booking{% endblock %}
+    
+{% block admin_content %}
+
+<div class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <h2 class="text-3xl font-bold mb-8 text-center text-primary-400">Add Booking</h2>
+        <form id="bbqForm" method="post" class="space-y-8">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label for="{{ form.date.id_for_label }}" class="mb-2 font-semibold">{{ form.date.label}}</label>
+                        {{ form.date|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="{{ form.time.id_for_label }}" class="mb-2 font-semibold">{{ form.time.label}}</label>
+                        {{ form.time|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="{{ form.location.id_for_label }}" class="mb-2 font-semibold">{{ form.location.label}}</label>
+                        {{ form.location|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label for="{{ form.guests.id_for_label }}" class="mb-2 font-semibold">{{ form.guests.label}}</label>
+                        {{ form.guests|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="{{ form.event_type.id_for_label }}" class="mb-2 font-semibold">{{form.event_type.label}}</label>
+                        {{ form.event_type|add_class:"bg-gray-800 text-white rounded-md p-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent" }}
+                    </div>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-primary-400">Main Dishes</h3>
+                    <div id="mainDishes" class="space-y-3">
+                        {% for dish in form.MAIN_DISHES %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="main_dish_{{ dish.0 }}" name="main_dish_{{ dish.0 }}" {% if dish.0 in booking.main_dishes %}checked{% endif %}
+                                    class="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-600 bg-gray-700">
+                                <label for="main_dish_{{ dish.0 }}" class="ml-2">{{ dish.1 }}</label>
+                            </div>
+                            <input type="number" id="main_dish_{{ dish.0 }}_count" name="main_dish_{{ dish.0 }}_count"
+                                min="0" 
+                                class="bg-gray-700 text-white rounded-md p-1 w-16 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-primary-400">Side Dishes</h3>
+                    <div id="sideDishes" class="space-y-3">
+                        {% for dish in form.SIDE_DISHES %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="side_dish_{{ dish.0 }}" name="side_dish_{{ dish.0 }}" {% if dish.0 in booking.side_dishes %}checked{% endif %}
+                                    class="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-600 bg-gray-700">
+                                <label for="side_dish_{{ dish.0 }}" class="ml-2">{{ dish.1 }}</label>
+                            </div>
+                            <input type="number" id="side_dish_{{ dish.0 }}_count" name="side_dish_{{ dish.0 }}_count"
+                                min="0"
+                                class="bg-gray-700 text-white rounded-md p-1 w-16 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-primary-400">Desserts</h3>
+                    <div id="desserts" class="space-y-3">
+                        {% for dessert in form.DESSERTS %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="dessert_{{ dessert.0 }}" name="dessert_{{ dessert.0 }}" {% if dessert.0 in booking.desserts %}checked{% endif %}
+                                    class="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-600 bg-gray-700">
+                                <label for="dessert_{{ dessert.0 }}" class="ml-2">{{ dessert.1 }}</label>
+                            </div>
+                            <input type="number" id="dessert_{{ dessert.0 }}_count" name="dessert_{{ dessert.0 }}_count"
+                                min="0" 
+                                class="bg-gray-700 text-white rounded-md p-1 w-16 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center mt-8">
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    Add Event
+                </button>
+            </div>
+        </form>
+    </div>
+
+    
+</div>
+
+{% block extra_js %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const guestsInput = document.getElementById('id_guests');
+        const mainDishes = document.querySelectorAll('#mainDishes input[type="number"]');
+        const sideDishes = document.querySelectorAll('#sideDishes input[type="number"]');
+        const desserts = document.querySelectorAll('#desserts input[type="number"]');
+
+        function createErrorElement(id) {
+            const errorElement = document.createElement('div');
+            errorElement.id = id;
+            errorElement.className = 'text-red-500 text-sm mt-1';
+            return errorElement;
+        }
+
+        const mainDishError = createErrorElement('mainDishError');
+        const sideDishError = createErrorElement('sideDishError');
+        const dessertError = createErrorElement('dessertError');
+
+        document.getElementById('mainDishes').appendChild(mainDishError);
+        document.getElementById('sideDishes').appendChild(sideDishError);
+        document.getElementById('desserts').appendChild(dessertError);
+
+        function validateForm() {
+            const guests = parseInt(guestsInput.value) || 0;
+
+            let mainDishCount = 0;
+            let sideDishCount = 0;
+            let dessertCount = 0;
+
+            mainDishes.forEach(input => {
+                mainDishCount += parseInt(input.value) || 0;
+            });
+
+            sideDishes.forEach(input => {
+                sideDishCount += parseInt(input.value) || 0;
+            });
+
+            desserts.forEach(input => {
+                dessertCount += parseInt(input.value) || 0;
+            });
+
+            mainDishError.textContent = mainDishCount !== guests ? `Main dish count should be equal to the number of guests (${guests})` : '';
+            sideDishError.textContent = sideDishCount !== guests * 2 ? `Side dish count should be twice the number of guests (${guests * 2})` : '';
+            dessertError.textContent = dessertCount !== guests * 2 ? `Dessert count should be twice the number of guests (${guests * 2})` : '';
+        }
+
+        guestsInput.addEventListener('input', validateForm);
+
+        const allDishInputs = [...mainDishes, ...sideDishes, ...desserts];
+        allDishInputs.forEach(input => {
+            input.addEventListener('input', validateForm);
+        });
+
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            const countInput = document.getElementById(`${checkbox.id}_count`);
+
+            // Set initial visibility based on checkbox state
+            countInput.style.display = checkbox.checked ? 'inline' : 'none';
+
+            checkbox.addEventListener('change', function () {
+                countInput.style.display = this.checked ? 'inline' : 'none';
+                if (this.checked && countInput.value === '0') {
+                    countInput.value = 1;
+                } else if (!this.checked) {
+                    countInput.value = 0;
+                }
+                validateForm();
+            });
+        });
+
+        // Run initial validation
+        validateForm();
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

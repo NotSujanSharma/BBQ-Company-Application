@@ -1,0 +1,60 @@
+{% extends "admin_base.html" %}
+{% load custom_filters %}
+
+{% block title %}Staff Overview{% endblock %}
+{% block header_title %}Staff Overview{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8 bg-gray-900 text-gray-300">
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="bg-blue-900 border-l-4 border-blue-500 text-blue-200 p-4 mb-2" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-white">Staff Overview</h2>
+            <canvas id="staffOverviewChart"></canvas>
+        </div>
+        
+    </div>
+
+<script>
+    // Staff Overview Chart
+    var ctx = document.getElementById('staffOverviewChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Chefs', 'Servers', 'Managers'],
+            datasets: [{
+                data: [{{ chef_count }}, {{ server_count }}, {{ manager_count }}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Staff Distribution by Role'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
