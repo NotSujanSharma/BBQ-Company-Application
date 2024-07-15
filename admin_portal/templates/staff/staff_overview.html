@@ -6,6 +6,7 @@
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@2.0.2/build/global/luxon.min.js"></script>
 {% endblock %}
 
 {% block admin_content %}
@@ -19,13 +20,50 @@
         {% endfor %}
     </div>
     {% endif %}
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4 text-white">Staff Overview</h2>
+            <h2 class="text-xl font-semibold mb-4 text-white">Staff Distribution</h2>
             <canvas id="staffOverviewChart"></canvas>
         </div>
-        
+        <div class="bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4 text-white">Today's Attendance</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-700">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">In Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Out Time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-600">
+                        {% for staff in staff_list %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ staff.name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="markAttendance({{ staff.id }}, 'present')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded mr-2">
+                                    Present
+                                </button>
+                                <button onclick="markAttendance({{ staff.id }}, 'absent')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded">
+                                    Absent
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap" id="inTime-{{ staff.id }}">-</td>
+                            <td class="px-6 py-4 whitespace-nowrap" id="outTime-{{ staff.id }}">-</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 whitespace-nowrap text-center">No staff members found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+</div>
 
 <script>
     // Staff Overview Chart
@@ -47,14 +85,42 @@
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'top',
+                    position: 'bottom',
                 },
                 title: {
                     display: true,
-                    text: 'Staff Distribution by Role'
+                    text: 'Staff Distribution by Role',
+                    color: 'white'
                 }
             }
         }
     });
+
+    // Attendance Tracking
+    function markAttendance(staffId, status) {
+        if (status === 'present') {
+            const DateTime = luxon.DateTime;
+            const now = DateTime.now().toFormat('HH:mm');
+            
+            if (!document.getElementById(`inTime-${staffId}`).innerText || document.getElementById(`inTime-${staffId}`).innerText === '-') {
+                let inTime = prompt("Enter in time (HH:mm):", now);
+                if (inTime) {
+                    document.getElementById(`inTime-${staffId}`).innerText = inTime;
+                }
+            } else {
+                let outTime = prompt("Enter out time (HH:mm):", now);
+                if (outTime) {
+                    document.getElementById(`outTime-${staffId}`).innerText = outTime;
+                }
+            }
+        } else {
+            document.getElementById(`inTime-${staffId}`).innerText = '-';
+            document.getElementById(`outTime-${staffId}`).innerText = '-';
+        }
+        
+        // Here you would typically send an AJAX request to update the server
+        // For demonstration, we're just updating the UI
+        console.log(`Staff ${staffId} marked as ${status}`);
+    }
 </script>
 {% endblock %}

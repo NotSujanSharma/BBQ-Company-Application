@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.urls import reverse
 from accounts.forms import BBQBookingForm
-from .forms import CampaignForm
+from .forms import CampaignForm, StaffForm
 from .models import Campaign, Staff
 from datetime import timedelta
 from django.http import JsonResponse
@@ -523,7 +523,6 @@ def add_booking(request):
 
 @staff_member_required
 def staff_overview(request):
-    # staff_list = CustomUser.objects.filter(is_staff=True)
     staff_list = Staff.objects.all()
     chef_count = Staff.objects.filter(role='chef').count()
     server_count = Staff.objects.filter(role='server').count()
@@ -540,32 +539,35 @@ def staff_overview(request):
 @staff_member_required
 def add_staff(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        role = request.POST.get('role')
-        Staff.objects.create(name=name, email=email, role=role)
-        messages.success(request, 'Staff member added successfully.')
+
+        form = StaffForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Staff member added successfully.')
+        else:
+            messages.error(request, 'An error occurred. Please try again.')
         return redirect('admin_staff_list')
-    return render(request, 'staff/add_staff.html')
+    return render(request, 'staff/add_staff.html', {'form': StaffForm()})
 
 @staff_member_required
 def edit_staff(request, staff_id):
     staff = Staff.objects.get(id=staff_id)
     if request.method == 'POST':
-        staff.name = request.POST.get('name')
-        staff.email = request.POST.get('email')
-        staff.role = request.POST.get('role')
-        staff.save()
-        messages.success(request, 'Staff member updated successfully.')
+        form = StaffForm(request.POST, instance=staff)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Staff member updated successfully.')
+        else:
+            messages.error(request, 'An error occurred. Please try again.')
         return redirect('admin_staff_list')
-    return render(request, 'staff/edit_staff.html', {'staff': staff})
+    return render(request, 'staff/edit_staff.html',{'form': StaffForm(instance=staff)})
 
 @staff_member_required
 def delete_staff(request, staff_id):
     staff = Staff.objects.get(id=staff_id)
     staff.delete()
     messages.success(request, 'Staff member deleted successfully.')
-    return redirect('admin_staff_overview')
+    return redirect('admin_staff_list')
 
 @staff_member_required
 def staff_list(request):
@@ -573,3 +575,23 @@ def staff_list(request):
     return render(request, 'staff/staff_list.html', {'staff_list': staff_list})
     
 
+@staff_member_required
+def update_attendance(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+    staff_id = request.POST.get('staff_id')
+    status = request.POST.get('status')
+    in_time = request.POST.get('in_time')
+    out_time = request.POST.get('out_time')
+
+    attendance, created = Attendance.objects.update_or_create(
+        staff_id=staff_id,
+        date=datetime.date.today(),
+        defaults={
+            'status': status,
+            'in_time': in_time if in_time else None,
+            'out_time': out_time if out_time else None
+        }
+    )
+
+    return JsonResponse({'success': True})

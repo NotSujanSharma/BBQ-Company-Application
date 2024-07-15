@@ -44,6 +44,8 @@ urlpatterns = [
     path('add-staff/', views.add_staff, name='admin_add_staff'),
     path('edit-staff/<int:staff_id>/', views.edit_staff, name='admin_edit_staff'),
     path('delete-staff/<int:staff_id>/', views.delete_staff, name='admin_delete_staff'),
-    
+
+    # update_attendance
+    path('update-attendance/', views.update_attendance, name='update_attendance'),
 
 ]
