@@ -609,7 +609,7 @@ def formalize_message(request):
         data = json.loads(request.body)
         informal_message = data.get('message', '')
         
-        api_key = "AIzaSyAYkGuWFEg8-5N_aMZTA8qNYluur0xgzAQ"
+        api_key = ""
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
         
         headers = {
