@@ -31,7 +31,7 @@ function displayClientDetails(client) {
             <div class="col-span-2 sm:col-span-1">
                 <p class="text-lg font-semibold mb-3">Personal Information</p>
                 <p class="mb-2">Name: ${client.first_name} ${client.last_name}</p>
-                <p class="mb-2">Email: ${client.email}</p>
+                <p class="mb-2">Email: <a href="/admin-portal/new-message/?email=${client.email}">${client.email}</a></p>
                 <p class="mb-2">Phone: ${client.contact_number}</p>
                 <p class="mb-2">Address: ${client.address}</p>
             </div>

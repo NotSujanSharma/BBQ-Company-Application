@@ -11,9 +11,14 @@ from .models import Campaign, Staff
 from datetime import timedelta
 from django.http import JsonResponse
 from accounts.forms import UserProfileForm
+from .mail import send_mail
+
+#formalizer
+import json
+import requests
+from django.views.decorators.csrf import csrf_exempt
 
 from django.db.models import Avg
-
 # import messages
 from django.contrib import messages
 
@@ -595,3 +600,65 @@ def update_attendance(request):
     )
 
     return JsonResponse({'success': True})
+
+
+@csrf_exempt
+@staff_member_required
+def formalize_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        informal_message = data.get('message', '')
+        
+        api_key = "AIzaSyAYkGuWFEg8-5N_aMZTA8qNYluur0xgzAQ"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "contents": [{
+                "parts": [{
+                    "text": f"Convert the following message into a professional and formal tone, emphasizing excellent customer service. Do not add any extra options, suggestions, or placeholders. Just convert the message as instructed.: '{informal_message}'"
+                }]
+            }]
+        }
+        
+        response = requests.post(f"{url}?key={api_key}", headers=headers, json=payload)
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            formalized_message = response_data['candidates'][0]['content']['parts'][0]['text']
+            return JsonResponse({'formalized_message': formalized_message})
+        else:
+            return JsonResponse({'error': 'Failed to formalize message', 'details': response.text}, status=500)
+
+# 
+
+@staff_member_required
+def new_message(request):
+    context={}
+    if (request.GET.get('email')):
+        context['email'] = request.GET.get('email')
+    if (request.GET.get('subject')):
+        context['subject'] = request.GET.get('subject')
+
+    return render(request, 'new_message.html', context)
+    
+
+@staff_member_required
+def send_message(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        if not email or not subject or not message:
+            messages.error(request, 'All fields are required')
+            return redirect('new_message')
+        
+        if send_mail(subject, message, [email]):
+            messages.success(request, 'Message sent successfully')
+        else:
+            messages.error(request, 'Failed to send message. Please try again.')
+        return redirect('new_message')
+    return redirect('new_message')

@@ -48,4 +48,10 @@ urlpatterns = [
     # update_attendance
     path('update-attendance/', views.update_attendance, name='update_attendance'),
 
+    path('new-message/', views.new_message, name='new_message'),
+
+    path('formalize/',views.formalize_message, name='formalize_message'),
+
+    path('send-message/', views.send_message, name='send_message'),
+
 ]

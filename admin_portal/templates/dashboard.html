@@ -157,7 +157,7 @@
                 <div class="p-4 rounded-lg">
                     <h4 class="text-lg font-semibold mb-3 text-white">Client Information</h4>
                     <p class="mb-2"><span class="font-medium">Name:</span> ${booking.user.first_name} ${booking.user.last_name}</p>
-                    <p class="mb-2"><span class="font-medium">Email:</span> ${booking.user.email}</p>
+                    <p class="mb-2"><span class="font-medium">Email:</span><a href="/admin-portal/new-message/?email=${booking.user.email}&subject=Regarding ${booking.event_type}, ${formatDate(booking.date)}"> ${booking.user.email}</a></p>
                     <p class="mb-2"><span class="font-medium">Contact:</span> ${booking.user.contact_number}</p>
                 </div>
             </div>
